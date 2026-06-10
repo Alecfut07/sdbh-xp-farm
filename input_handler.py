@@ -11,10 +11,23 @@ from typing import Dict, Optional, Tuple
 import pyautogui
 
 import config
+from controls import CONTROLS, get_controller_label, get_keyboard_key
 
 logger = logging.getLogger(__name__)
 
 Point = Tuple[int, int]
+
+# Xbox 360 / evdev button codes (Linux input-event-codes.h)
+EVDEV_BUTTONS: Dict[str, int] = {
+    "A": 304,  # BTN_SOUTH
+    "B": 305,  # BTN_EAST
+    "X": 307,  # BTN_WEST
+    "Y": 308,  # BTN_NORTH
+    "Start": 315,  # BTN_START
+    "Back": 314,  # BTN_SELECT
+    "LB": 310,  # BTN_TL
+    "RB": 311,  # BTN_TR
+}
 
 
 def human_delay(
@@ -27,46 +40,43 @@ class InputHandler(ABC):
     """Interface for game inputs."""
 
     @abstractmethod
-    def press_button(self, button: str) -> None: ...
+    def press_button(self, button: str) -> None:
+        """Press a game control by action name (e.g. 'Continue/Confirm')."""
+        ...
 
     @abstractmethod
     def drag_drop(self, start: Point, end: Point, duration: float = 0.4) -> None: ...
 
 
 class PyAutoGUIInputHandler(InputHandler):
-    """
-    Keyboard / mouse backend.
-    Button map mirrors common gampad labels used by the state machine.
-    """
-
-    BUTTON_MAP = Dict[str, str] = {
-        "A": "enter",
-        "B": "esc",
-        "Start": "enter",
-        "Select": "tab",
-        "X": "x",
-        "Y": "y",
-    }
+    """Keyboard / mouse backend using Main or Sub keys from .cursorrules."""
 
     def __init__(self) -> None:
         pyautogui.FAILSAFE = config.FAILSAFE_ENABLED
         pyautogui.PAUSE = 0.05
         logger.info(
-            "PyAutoGUI input handler initialized (FAILSAFE=%s)", config.FAILSAFE_ENABLED
+            "PyAutoGUI input handler initialized " "(FAILSAFE=%s, layout=%s)",
+            config.FAILSAFE_ENABLED,
+            config.KEYBOARD_LAYOUT,
         )
 
-    def press_button(self, button_name: str) -> None:
-        key = self.BUTTON_MAP.get(button_name)
-        if key is None:
-            logger.error("Unknown button: %s", button_name)
+    def press_button(self, action: str) -> None:
+        if action not in CONTROLS:
+            logger.error("Unknown control action: %s", action)
             return
 
         try:
+            key = get_keyboard_key(action, config.KEYBOARD_LAYOUT)
             human_delay(config.ACTION_DELAY_MIN, config.ACTION_DELAY_MAX)
-            logger.info("Pressing button '%s' -> key '%s'", button_name, key)
+            logger.info(
+                "Pressing '%s' -> key '%s' (%s layout)",
+                action,
+                key,
+                config.KEYBOARD_LAYOUT,
+            )
             pyautogui.press(key)
         except Exception:
-            logger.exception("Failed to press button %s", button_name)
+            logger.exception("Failed to press %s", action)
 
     def drag_drop(self, start: Point, end: Point, duration: float = 0.4) -> None:
         try:
@@ -86,16 +96,8 @@ class PyAutoGUIInputHandler(InputHandler):
 class ControllerInputHandler(InputHandler):
     """
     Placeholder for Xbox 360-style controller emulation via evdev/python-xlib.
-    Wire this up when PyAutoGUI is unreliable on Steam Deck Game Mode.
+    Maps .cursorrules controller column -> evdev BTN codes.
     """
-
-    BUTTON_MAP = Dict[str, int] = {
-        # evdev BTN_* constants - fill in when device is configured
-        "A": 304,
-        "B": 305,
-        "Start": 315,
-        "Select": 314,
-    }
 
     def __init__(self, device_path: Optional[str] = None) -> None:
         self.device_path = device_path
@@ -104,19 +106,35 @@ class ControllerInputHandler(InputHandler):
             device_path or "Virtual uinput device",
         )
 
-    def press_button(self, button_name: str) -> None:
+    def press_button(self, action: str) -> None:
+        if action not in CONTROLS:
+            logger.error("Unknown control action: %s", action)
+            return
+
         try:
+            label = get_controller_label(action)
             human_delay(config.ACTION_DELAY_MIN, config.ACTION_DELAY_MAX)
-            logger.info("[STUB] Controller press: %s", button_name)
-            # TODO: open evdev device, emit BTN press + release events
+            logger.info("[STUB] Controller press '%s' -> %s", action, label)
+
+            if label.startswith("DPAD_"):
+                # TODO: emit ABS_HAT0X / ABS_HAT0Y for direction
+                pass
+            elif label in ("LT", "RT"):
+                # TODO: emit ABS_Z / ABS_RZ axis events
+                pass
+            elif label in EVDEV_BUTTONS:
+                # TODO: emit EVDEV_BUTTONS[label] press + release
+                pass
+            else:
+                logger.error("No evdev mapping for controller label: %s", label)
         except Exception:
-            logger.exception("Controller press_button failed for %s", button_name)
+            logger.exception("Controller press_button failed for %s", action)
 
     def drag_drop(self, start: Point, end: Point, duration: float = 0.4) -> None:
         try:
             human_delay(config.ACTION_DELAY_MIN, config.ACTION_DELAY_MAX)
-            logger.info("[STUB] Controller stick drag %s", start, end)
-            # TODO: emulate left stick motion from normalized start/end coords
+            logger.info("[STUB] Controller stick drag %s -> %s", start, end)
+            # TODO: emulate left analog stick from normalized start/end coords
         except Exception:
             logger.exception("Controller drag_drop failed")
 
