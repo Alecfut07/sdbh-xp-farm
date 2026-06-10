@@ -46,6 +46,9 @@ logs/*.log
 logs/*.txt
 *.log
 
+# Cursor configuration
+.cursorrules
+
 # Keep empty dirs (optional — only if you use .gitkeep)
 # !logs/.gitkeep
 # !templates/.gitkeep
