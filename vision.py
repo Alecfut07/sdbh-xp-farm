@@ -134,6 +134,55 @@ def find_on_screen_with_score(
         return None
 
 
+def save_debug_screenshot(filename: str = "debug_capture.png") -> Path:
+    """Save a screenshot for troubleshooting template mismatches."""
+    path = config.LOGS_DIR / filename
+    config.LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+    with mss.mss() as sct:
+        if config.SCREEN_REGION:
+            left, top, width, height = config.SCREEN_REGION
+            monitor = {"left": left, "top": top, "width": width, "height": height}
+        else:
+            monitor = sct.monitors[1]
+
+        screenshot = sct.grab(monitor)
+        to_png(screenshot.rgb, screenshot.size, output=str(path))
+
+    logger.info("Saved debug screenshot to %s", path)
+    return path
+
+
+def log_best_match(
+    template_name: str, confidence: float = config.DEFAULT_CONFIDENCE
+) -> float:
+    """Log the best template match score without requiring a pass."""
+    try:
+        template = load_template(template_name)
+        screen = _capture_screen_gray()
+        logger.info(
+            "Capture size: %dx%d | Template %s: %dx%d",
+            screen.shape[1],
+            screen.shape[0],
+            template_name,
+            template.shape[1],
+            template.shape[0],
+        )
+        result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, max_loc = cv2.minMaxLoc(result)
+        logger.info(
+            "Best match for %s: %.3f at %s (threshold %.3f)",
+            template_name,
+            max_val,
+            max_loc,
+            confidence,
+        )
+        return float(max_val)
+    except Exception:
+        logger.exception("log_best_match failed for %s", template_name)
+        return 0.0
+
+
 def wait_for_element(
     template_name: str,
     timeout: float = config.DEFAULT_WAIT_TIMEOUT,
@@ -161,6 +210,8 @@ def wait_for_element(
         time.sleep(poll_interval)
 
     logger.warning("Timed out waiting for %s", template_name)
+    log_best_match(template_name, confidence)
+    save_debug_screenshot(f"wait_timeout_{template_name}.png")
     return None
 
 
@@ -170,7 +221,7 @@ def wait_for_all_elements(
     confidence: float = config.DEFAULT_CONFIDENCE,
     poll_interval: float = 0.25,
 ) -> Optional[Dict[str, Point]]:
-    f"""
+    """
     Block until ALL templates appear on screen simultaneously.
     Returns template_name: (x, y) or None on timeout.
     """
@@ -204,23 +255,7 @@ def wait_for_all_elements(
         time.sleep(poll_interval)
 
     logger.warning("Timed out waiting for all templates: %s", template_names)
+    for name in template_names:
+        log_best_match(name, confidence)
+    save_debug_screenshot("wait_timeout.png")
     return None
-
-
-def save_debug_screenshot(filename: str = "debug_capture.png") -> Path:
-    """Save a screenshot for troubleshooting template mismatches."""
-    path = config.LOGS_DIR / filename
-    config.LOGS_DIR.mkdir(parents=True, exist_ok=True)
-
-    with mss.mss() as sct:
-        if config.SCREEN_REGION:
-            left, top, width, height = config.SCREEN_REGION
-            monitor = {"left": left, "top": top, "width": width, "height": height}
-        else:
-            monitor = sct.monitors[1]
-
-        screenshot = sct.grab(monitor)
-        to_png(screenshot.rgb, screenshot.size, output=str(path))
-
-    logger.info("Saved debug screenshot to %s", path)
-    return path
