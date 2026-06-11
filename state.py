@@ -73,8 +73,10 @@ class StateMachine:
             self.state = GameState.DONE
             return
 
-        logger.info("Secret Battle selected at %s - pressing A", secret_battle)
-        self.inputs.press_button("A")
+        logger.info(
+            "Secret Battle selected at %s - pressing Continue/Confirm", secret_battle
+        )
+        self.inputs.press_button("Continue/Confirm")
         human_delay()
 
         logger.info("Transition: Tournament Selection -> Cutscene Skip")
@@ -105,8 +107,8 @@ class StateMachine:
             self.state = GameState.DONE
             return
 
-        logger.info("Dialog confirmed at %s - pressing Start to skip", dialog)
-        self.inputs.press_button("Start")
+        logger.info("Dialog confirmed at %s - pressing Open Menu to skip", dialog)
+        self.inputs.press_button("Open Menu")
         human_delay()
 
         logger.info("Cutscene skip complete. Stopping (next state TBD).")
