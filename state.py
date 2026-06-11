@@ -42,24 +42,24 @@ class StateMachine:
     # --------------------------------------------------------------
     def _state_tournament_selection(self) -> None:
         """
-        Wait for tournament menu + Secret Battle text, then confirm.
-        Matchers: select_tournament_text.png + secret_battle_text.png
+        Wait for Secret Battle text on screen, then confirm.
+        Primary matcher: secret_battle_text.png
+        (select_tournament_text is unreliable on Deck - optional check only)
         """
         logger.info("Entering State 1: Tournament Selection")
 
-        matches = vision.wait_for_all_elements(
-            [
-                config.TEMPLATE_SELECT_TOURNAMENT_TEXT,
-                config.TEMPLATE_SECRET_BATTLE_TEXT,
-            ],
+        # Optional non-blocking check - log score but don't require it
+        vision.log_best_match(config.TEMPLATE_SELECT_TOURNAMENT_TEXT)
+
+        secret_battle = vision.wait_for_element(
+            config.TEMPLATE_SECRET_BATTLE_TEXT,
             timeout=config.DEFAULT_WAIT_TIMEOUT,
             confidence=config.DEFAULT_CONFIDENCE,
         )
 
-        if matches is None:
+        if secret_battle is None:
             logger.error(
-                "Tournament menu not ready. Expected both %s and %s",
-                config.TEMPLATE_SELECT_TOURNAMENT_TEXT,
+                "Secret Battle not detected. Check template: %s",
                 config.TEMPLATE_SECRET_BATTLE_TEXT,
             )
             vision.save_debug_screenshot("state1_fail.png")
@@ -71,8 +71,8 @@ class StateMachine:
             return
 
         logger.info(
-            "Tournament menu ready - Secret Battle at %s, pressing Continue/Confirm",
-            matches[config.TEMPLATE_SECRET_BATTLE_TEXT],
+            "Secret Battle found at %s - pressing Continue/Confirm",
+            secret_battle,
         )
         self.inputs.press_button("Continue/Confirm")
         human_delay()
