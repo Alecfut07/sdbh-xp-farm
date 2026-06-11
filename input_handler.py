@@ -96,7 +96,7 @@ class PyAutoGUIInputHandler(InputHandler):
 class ControllerInputHandler(InputHandler):
     """Virtual Xbox 360-style gamepad via evdev UInput."""
 
-    _DPAD_HAT = Dict[str, Tuple[int, int]] = {
+    _DPAD_HAT: Dict[str, Tuple[int, int]] = {
         "DPAD_UP": (0, -1),
         "DPAD_DOWN": (0, 1),
         "DPAD_LEFT": (-1, 0),
@@ -176,8 +176,8 @@ class ControllerInputHandler(InputHandler):
             )
 
     def _tap_key(self, btn_code: int) -> None:
-        if self._ui is None or self.e is None:
-            logger.error("No UInput device - dpad tap skipped")
+        if self._ui is None or self._e is None:
+            logger.error("No UInput device — button tap skipped")
             return
 
         self._ui.write(self._e.EV_KEY, btn_code, 1)
