@@ -3,5 +3,4 @@ numpy>=1.24.0
 Pillow>=10.0.0
 pyautogui>=0.9.54
 mss>=9.0.0
-python-xlib>=0.33; sys_platform == "linux"
-evdev>=1.6.1; sys_platform == "linux"
+evdev-binary>=1.9.3; sys_platform == "linux"
