@@ -25,7 +25,7 @@ FAILSAFE_ENABLED = True
 
 # Region of interest (x, y, width, height). None = full screen.
 # Useful to ignore overlays / letterboxing.
-SCREEN_REGION = None # e.g. (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+SCREEN_REGION = None  # e.g. (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 
 # Template matching defaults
 DEFAULT_CONFIDENCE = 0.8
@@ -40,7 +40,7 @@ ACTION_DELAY_MAX = 0.8
 # --------------------------------------------------------------
 # Input mode
 # --------------------------------------------------------------
-USE_CONTROLLER = False # True -> evdev/XInput path; False -> PyAutoGUI keyboard/mouse
+USE_CONTROLLER = True  # True -> evdev/XInput path; False -> PyAutoGUI keyboard/mouse
 
 # --------------------------------------------------------------
 # Template filenames (must exist under templates/)
