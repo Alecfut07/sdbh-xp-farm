@@ -22,6 +22,7 @@ def main() -> None:
         config.TEMPLATE_CONFIRM_REGISTER_TEAM_TEXT,
         config.TEMPLATE_SELECT_HERO_ROBO_ROUND_TEXT,
         config.TEMPLATE_CONFIRM_HERO_ROBO_ROUND_TEXT,
+        config.TEMPLATE_SET_ITEM_EXP_LOGO,
     ]
 
     for name in templates:
