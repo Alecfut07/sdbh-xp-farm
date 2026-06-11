@@ -19,6 +19,7 @@ class GameState(Enum):
     CONFIRM_REGISTER_TEAM = auto()
     SELECT_HERO_ROBO_ROUND = auto()
     CONFIRM_HERO_ROBO_ROUND = auto()
+    SET_ITEM_EXP = auto()
     DONE = auto()
 
 
@@ -43,6 +44,8 @@ class StateMachine:
                 self._state_select_hero_robo_round()
             elif self.state == GameState.CONFIRM_HERO_ROBO_ROUND:
                 self._state_confirm_hero_robo_round()
+            elif self.state == GameState.SET_ITEM_EXP:
+                self._state_set_item_exp()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -284,7 +287,45 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info(
-            "Hero Robo round registration confirmed. Stopping (next state TBD)."
+        logger.info("Hero Robo round registration confirmed.")
+        logger.info("Transition: Confirm Hero Robo Round -> Set Item EXP")
+        self.state = GameState.SET_ITEM_EXP
+
+    # --------------------------------------------------------------
+    # State 7: Set Item EXP (1.5x logo)
+    # --------------------------------------------------------------
+    def _state_set_item_exp(self) -> None:
+        """
+        Wait for exp 1.5x logo on Set Item EXP screen, then press A to select.
+        Matcher: set_item_exp_logo.png
+        """
+        logger.info("Entering State 7: Set Item EXP (1.5x logo)")
+
+        exp_logo = vision.wait_for_element(
+            config.TEMPLATE_SET_ITEM_EXP_LOGO,
+            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            confidence=config.DEFAULT_CONFIDENCE,
         )
+
+        if exp_logo is None:
+            logger.error(
+                "exp 1.5x logo not detected. Check template: %s",
+                config.TEMPLATE_SET_ITEM_EXP_LOGO,
+            )
+            vision.save_debug_screenshot("state7_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_SET_ITEM_EXP_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "exp 1.5x logo found at %s - pressing Continue/Confirm (A)",
+            exp_logo,
+        )
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info("exp 1.5x item selected. Stopping (next state TBD).")
         self.state = GameState.DONE
