@@ -94,17 +94,111 @@ class PyAutoGUIInputHandler(InputHandler):
 
 
 class ControllerInputHandler(InputHandler):
-    """
-    Placeholder for Xbox 360-style controller emulation via evdev/python-xlib.
-    Maps .cursorrules controller column -> evdev BTN codes.
-    """
+    """Virtual Xbox 360-style gamepad via evdev UInput."""
+
+    _DPAD_HAT = Dict[str, Tuple[int, int]] = {
+        "DPAD_UP": (0, -1),
+        "DPAD_DOWN": (0, 1),
+        "DPAD_LEFT": (-1, 0),
+        "DPAD_RIGHT": (1, 0),
+    }
 
     def __init__(self, device_path: Optional[str] = None) -> None:
+        self._ui = None
+        self._e = None
         self.device_path = device_path
-        logger.warning(
-            "ControllerInputHandler is a stub. Implement evdev writes for %s",
-            device_path or "Virtual uinput device",
-        )
+
+        try:
+            from evdev import AbsInfo, UInput, ecodes as e
+
+            self._e = e
+            self._ui = UInput(
+                events={
+                    e.EV_KEY: [
+                        e.BTN_SOUTH,  # A
+                        e.BTN_EAST,  # B
+                        e.BTN_WEST,  # X
+                        e.BTN_NORTH,  # Y
+                        e.BTN_TL,  # LB
+                        e.BTN_TR,  # RB
+                        e.BTN_SELECT,  # Back
+                        e.BTN_START,  # Start
+                    ],
+                    e.EV_ABS: [
+                        (
+                            e.ABS_X,
+                            AbsInfo(
+                                value=0,
+                                min=-32768,
+                                max=32767,
+                                fuzz=0,
+                                flat=4096,
+                                resolution=0,
+                            ),
+                        ),
+                        (
+                            e.ABS_Y,
+                            AbsInfo(
+                                value=0,
+                                min=-32768,
+                                max=32767,
+                                fuzz=0,
+                                flat=4096,
+                                resolution=0,
+                            ),
+                        ),
+                        (
+                            e.ABS_HAT0X,
+                            AbsInfo(
+                                value=0, min=-1, max=1, fuzz=0, flat=0, resolution=0
+                            ),
+                        ),
+                        (
+                            e.ABS_HAT0Y,
+                            AbsInfo(
+                                value=0, min=-1, max=1, fuzz=0, flat=0, resolution=0
+                            ),
+                        ),
+                    ],
+                },
+                name=config.CONTROLLER_DEVICE_NAME,
+                bustype=e.BUS_USB,
+                vendor=0x045E,  # Microsoft
+                product=0x028E,  # Xbox 360 Controller
+            )
+            logger.info(
+                "ControllerInputHandler ready (UInput device: %s)",
+                config.CONTROLLER_DEVICE_NAME,
+            )
+        except Exception:
+            logger.exception(
+                "Failed to init UInput. Run: sudo usermod -aG input deck, then log out/in"
+            )
+
+    def _tap_key(self, btn_code: int) -> None:
+        if self._ui is None or self.e is None:
+            logger.error("No UInput device - dpad tap skipped")
+            return
+
+        self._ui.write(self._e.EV_KEY, btn_code, 1)
+        self._ui.syn()
+        time.sleep(config.CONTROLLER_BUTTON_HOLD)
+        self._ui.write(self._e.EV_KEY, btn_code, 0)
+        self._ui.syn()
+
+    def _tap_dpad(self, label: str) -> None:
+        if self._ui is None or self._e is None:
+            logger.error("No UInput device — dpad tap skipped")
+            return
+
+        hx, hy = self._DPAD_HAT[label]
+        self._ui.write(self._e.EV_ABS, self._e.ABS_HAT0X, hx)
+        self._ui.write(self._e.EV_ABS, self._e.ABS_HAT0Y, hy)
+        self._ui.syn()
+        time.sleep(config.CONTROLLER_BUTTON_HOLD)
+        self._ui.write(self._e.EV_ABS, self._e.ABS_HAT0X, 0)
+        self._ui.write(self._e.EV_ABS, self._e.ABS_HAT0Y, 0)
+        self._ui.syn()
 
     def press_button(self, action: str) -> None:
         if action not in CONTROLS:
@@ -114,29 +208,27 @@ class ControllerInputHandler(InputHandler):
         try:
             label = get_controller_label(action)
             human_delay(config.ACTION_DELAY_MIN, config.ACTION_DELAY_MAX)
-            logger.info("[STUB] Controller press '%s' -> %s", action, label)
+            logger.info("Controller press '%s' -> %s", action, label)
 
-            if label.startswith("DPAD_"):
-                # TODO: emit ABS_HAT0X / ABS_HAT0Y for direction
-                pass
+            if label in EVDEV_BUTTONS:
+                self._tap_key(EVDEV_BUTTONS[label])
+            elif label in self._DPAD_HAT:
+                self._tap_dpad(label)
             elif label in ("LT", "RT"):
-                # TODO: emit ABS_Z / ABS_RZ axis events
-                pass
-            elif label in EVDEV_BUTTONS:
-                # TODO: emit EVDEV_BUTTONS[label] press + release
-                pass
+                logger.warning("Trigger %s not implemented yet", label)
             else:
                 logger.error("No evdev mapping for controller label: %s", label)
         except Exception:
             logger.exception("Controller press_button failed for %s", action)
 
     def drag_drop(self, start: Point, end: Point, duration: float = 0.4) -> None:
-        try:
-            human_delay(config.ACTION_DELAY_MIN, config.ACTION_DELAY_MAX)
-            logger.info("[STUB] Controller stick drag %s -> %s", start, end)
-            # TODO: emulate left analog stick from normalized start/end coords
-        except Exception:
-            logger.exception("Controller drag_drop failed")
+        logger.info("Controller stick drag %s -> %s (not implemented yet)", start, end)
+
+    def close(self) -> None:
+        if self._ui is not None:
+            self._ui.close()
+            self._ui = None
+            logger.info("UInput device closed")
 
 
 def create_input_handler() -> InputHandler:
