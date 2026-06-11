@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -28,7 +28,7 @@ def _scale(value: float) -> int:
 
 def load_template(template_name: str) -> np.ndarray:
     """Load a grayscale template image from templates/. Cached after first load."""
-    if template_name not in _template_cache:
+    if template_name in _template_cache:
         return _template_cache[template_name]
 
     path = config.TEMPLATES_DIR / template_name
@@ -155,6 +155,49 @@ def wait_for_element(
         time.sleep(poll_interval)
 
     logger.warning("Timed out waiting for %s", template_name)
+    return None
+
+
+def wait_for_all_elements(
+    template_names: List[str],
+    timeout: float = config.DEFAULT_WAIT_TIMEOUT,
+    confidence: float = config.DEFAULT_CONFIDENCE,
+    poll_interval: float = 0.25,
+) -> Optional[List[Point]]:
+    f"""
+    Block until ALL templates appear on screen simultaneously.
+    Returns template_name: (x, y) or None on timeout.
+    """
+    logger.info(
+        "Waiting for all templates %s (timeout=%.1fs, confidence=%.2f)",
+        template_names,
+        timeout,
+        confidence,
+    )
+    deadline = time.monotonic() + timeout
+
+    while time.monotonic() < deadline:
+        try:
+            matches: Dict[str, Point] = {}
+            all_found = True
+
+            for name in template_names:
+                point = find_on_screen(name, confidence=confidence)
+                if point is not None:
+                    all_found = False
+                    break
+                matches[name] = point
+
+            if all_found:
+                for name, point in matches.items():
+                    logger.info("Found %s at %s", name, point)
+                return matches
+        except Exception:
+            logger.exception("Error while waiting for %s", template_names)
+
+        time.sleep(poll_interval)
+
+    logger.warning("Timed out waiting for all templates: %s", template_names)
     return None
 
 
