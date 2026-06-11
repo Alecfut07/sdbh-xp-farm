@@ -18,6 +18,7 @@ class GameState(Enum):
     REGISTER_TEAM = auto()
     CONFIRM_REGISTER_TEAM = auto()
     SELECT_HERO_ROBO_ROUND = auto()
+    CONFIRM_HERO_ROBO_ROUND = auto()
     DONE = auto()
 
 
@@ -40,6 +41,8 @@ class StateMachine:
                 self._state_confirm_register_team()
             elif self.state == GameState.SELECT_HERO_ROBO_ROUND:
                 self._state_select_hero_robo_round()
+            elif self.state == GameState.CONFIRM_HERO_ROBO_ROUND:
+                self._state_confirm_hero_robo_round()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -241,5 +244,47 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info("Hero Robo round confirmed. Stopping (next state TBD).")
+        logger.info("Hero Robo round confirmed.")
+        logger.info("Transition: Select Hero Robo Round -> Confirm Hero Robo Round")
+        self.state = GameState.CONFIRM_HERO_ROBO_ROUND
+
+    # --------------------------------------------------------------
+    # State 6: Confirm Hero Robo Round (Yes)
+    # --------------------------------------------------------------
+    def _state_confirm_hero_robo_round(self) -> None:
+        """
+        Wait for Yes confirmation on Hero Robo round screen, then press A.
+        Matcher: confirm_the_round_your_super_hero_robo_activates_text.png
+        """
+        logger.info("Entering State 6: Confirm Hero Robo Round (Yes)")
+
+        yes_button = vision.wait_for_element(
+            config.TEMPLATE_CONFIRM_HERO_ROBO_ROUND_TEXT,
+            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            confidence=config.DEFAULT_CONFIDENCE,
+        )
+
+        if yes_button is None:
+            logger.error(
+                "Yes button not detected. Check template: %s",
+                config.TEMPLATE_CONFIRM_HERO_ROBO_ROUND_TEXT,
+            )
+            vision.save_debug_screenshot("state6_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_CONFIRM_HERO_ROBO_ROUND_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "Yes button found at %s - pressing Continue/Confirm (A)",
+            yes_button,
+        )
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info(
+            "Hero Robo round registration confirmed. Stopping (next state TBD)."
+        )
         self.state = GameState.DONE
