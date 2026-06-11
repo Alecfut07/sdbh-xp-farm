@@ -68,8 +68,10 @@ TEMPLATE_SELECT_TOURNAMENT_TEXT = "select_tournament_text.png"
 TEMPLATE_SECRET_BATTLE_TEXT = "secret_battle_text.png"
 TEMPLATE_GREAT_SAIYAMAN_DIALOG_TEXT = "great_saiyaman_dialog_text.png"
 TEMPLATE_REGISTER_TEAM_TEXT = "register_team_text.png"
+TEMPLATE_CONFIRM_REGISTER_TEAM_TEXT = "confirm_register_this_team_text.png"
 
 # Reference only — full-screen captures for manual debugging, not used at runtime
 TEMPLATE_SELECT_TOURNAMENT_FULL = "select_tournament(entire-screen).jpg"
 TEMPLATE_GREAT_SAIYAMAN_DIALOG_FULL = "great_saiyaman_dialog(entire-screen).jpg"
 TEMPLATE_REGISTER_TEAM_FULL = "register_team(entire-screen).jpg"
+TEMPLATE_CONFIRM_REGISTER_TEAM_FULL = "confirm_register_this_team(entire-screen).jpg"
