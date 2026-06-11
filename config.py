@@ -39,7 +39,11 @@ ACTION_DELAY_MIN = 0.3
 ACTION_DELAY_MAX = 0.8
 
 # --------------------------------------------------------------
-# Input mode
+# Input mode - WORKING STEAM DECK SETUP:
+#   1. Game Properties -> Controller -> "Disable Steam Input"
+#   2. USE_CONTROLLER = True
+#   3. pip install evdev-binary
+#  NOTE: Without "Disable Steam Input", the virtual pad controller is ignored.
 # --------------------------------------------------------------
 USE_CONTROLLER = True  # True -> evdev/XInput path; False -> PyAutoGUI keyboard/mouse
 
