@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
-import pyautogui
+import mss
 from PIL import Image
 
 import config
@@ -53,9 +53,15 @@ def load_template(template_name: str) -> np.ndarray:
 
 def _capture_screen_gray() -> np.ndarray:
     """Grab the screen (or region) and return a grayscale numpy array."""
-    screenshot = pyautogui.screenshot(region=config.SCREEN_REGION)
-    rgb = np.array(screenshot)
-    return cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+    with mss.mss() as sct:
+        if config.SCREEN_REGION:
+            left, top, width, height = config.SCREEN_REGION
+            monitor = {"left": left, "top": top, "width": width, "height": height}
+        else:
+            monitor = sct.monitors[1]  # primary display
+
+        img = np.array(sct.grab(monitor))
+        return cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
 
 
 def find_on_screen(
@@ -205,6 +211,15 @@ def save_debug_screenshot(filename: str = "debug_capture.png") -> Path:
     """Save a screenshot for troubleshooting template mismatches."""
     path = config.LOGS_DIR / filename
     config.LOGS_DIR.mkdir(parents=True, exist_ok=True)
-    pyautogui.screenshot(str(path), region=config.SCREEN_REGION)
+
+    with mss.mss() as sct:
+        if config.SCREEN_REGION:
+            left, top, width, height = config.SCREEN_REGION
+            monitor = {"left": left, "top": top, "width": width, "height": height}
+        else:
+            monitor = sct.monitors[1]
+
+        sct.shot(output=str(path), mon=monitor)
+
     logger.info("Saved debug screenshot to %s", path)
     return path
