@@ -72,6 +72,9 @@ TEMPLATE_CONFIRM_REGISTER_TEAM_TEXT = "confirm_register_this_team_text.png"
 TEMPLATE_SELECT_HERO_ROBO_ROUND_TEXT = (
     "select_the_round_your_super_hero_robo_activates_text.png"
 )
+TEMPLATE_CONFIRM_HERO_ROBO_ROUND_TEXT = (
+    "confirm_the_round_your_super_hero_robo_activates_text.png"
+)
 
 # Reference only — full-screen captures for manual debugging, not used at runtime
 TEMPLATE_SELECT_TOURNAMENT_FULL = "select_tournament(entire-screen).jpg"
@@ -80,4 +83,7 @@ TEMPLATE_REGISTER_TEAM_FULL = "register_team(entire-screen).jpg"
 TEMPLATE_CONFIRM_REGISTER_TEAM_FULL = "confirm_register_this_team(entire-screen).jpg"
 TEMPLATE_SELECT_HERO_ROBO_ROUND_FULL = (
     "select_the_round_your_super_hero_robo_activates(entire-screen).jpg"
+)
+TEMPLATE_CONFIRM_HERO_ROBO_ROUND_FULL = (
+    "confirm_the_round_your_super_hero_robo_activates(entire-screen).jpg"
 )
