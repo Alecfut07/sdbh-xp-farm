@@ -42,15 +42,20 @@ def main() -> int:
         logger.error("Templates directory missing: %s", config.TEMPLATES_DIR)
         return 1
 
+    inputs = None
     try:
         inputs = create_input_handler()
         machine = StateMachine(inputs)
+
         logger.info(
-            "Switch to the game window - tournament menu with Secret Battle visible"
+            "Steam Input must be DISABLED for this game. "
+            "Focus game window - tournament menu, Secret Battle visible."
         )
-        for i in range(5, 0, -1):
+        countdown = getattr(config, "STARTUP_COUNTDOWN_SECONDS", 5)
+        for i in range(countdown, 0, -1):
             logger.info("Starting in %d...", i)
             time.sleep(1)
+
         machine.run()
     except KeyboardInterrupt:
         logger.info("Interrupted by user.")
@@ -58,6 +63,9 @@ def main() -> int:
     except Exception:
         logger.exception("Fatal error - script stopped.")
         return 1
+    finally:
+        if inputs is not None and hasattr(inputs, "close"):
+            inputs.close()
 
     logger.info("=== SDBH XP Farm finished ===")
     return 0
