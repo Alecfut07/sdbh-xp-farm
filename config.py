@@ -53,6 +53,9 @@ CONTROLLER_DEVICE_NAME = "sdbh-xp-farm-gamepad"
 # How long a virtual button stays pressed (seconds)
 CONTROLLER_BUTTON_HOLD = 0.08
 
+# Seconds to wait before state machine (time to focus game window)
+STARTUP_COUNTDOWN_SECONDS = 5
+
 # "main" = Enter/Z/etc.  |  "sub" = B/L/etc. (from .cursorrules)
 KEYBOARD_LAYOUT = "main"
 
