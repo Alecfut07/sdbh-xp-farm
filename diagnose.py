@@ -19,6 +19,7 @@ def main() -> None:
         config.TEMPLATE_SECRET_BATTLE_TEXT,
         config.TEMPLATE_GREAT_SAIYAMAN_DIALOG_TEXT,
         config.TEMPLATE_REGISTER_TEAM_TEXT,
+        config.TEMPLATE_CONFIRM_REGISTER_TEAM_TEXT,
     ]
 
     for name in templates:
