@@ -20,6 +20,7 @@ def main() -> None:
         config.TEMPLATE_GREAT_SAIYAMAN_DIALOG_TEXT,
         config.TEMPLATE_REGISTER_TEAM_TEXT,
         config.TEMPLATE_CONFIRM_REGISTER_TEAM_TEXT,
+        config.TEMPLATE_SELECT_HERO_ROBO_ROUND_TEXT,
     ]
 
     for name in templates:
