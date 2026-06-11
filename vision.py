@@ -10,7 +10,6 @@ from typing import Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 import mss
-from PIL import Image
 
 import config
 
