@@ -45,6 +45,12 @@ USE_CONTROLLER = True  # True -> evdev/XInput path; False -> PyAutoGUI keyboard/
 # --------------------------------------------------------------
 # Template filenames (must exist under templates/)
 # --------------------------------------------------------------
-TEMPLATE_SELECT_TOURNAMENT = "select_tournament.png"
-TEMPLATE_SECRET_BATTLE_SELECTED = "secret_battle_selected.png"
-TEMPLATE_GREAT_SAIYAMAN_DIALOG = "great_saiyaman_dialog.png"
+
+# Active matchers — tight text crops (use these in the state machine)
+TEMPLATE_SELECT_TOURNAMENT_TEXT = "select_tournament_text.png"
+TEMPLATE_SECRET_BATTLE_TEXT = "secret_battle_text.png"
+TEMPLATE_GREAT_SAIYAMAN_DIALOG_TEXT = "great_saiyaman_dialog_text.png"
+
+# Reference only — full-screen captures for manual debugging, not used at runtime
+TEMPLATE_SELECT_TOURNAMENT_FULL = "select_tournament(entire-screen).jpg"
+TEMPLATE_GREAT_SAIYAMAN_DIALOG_FULL = "great_saiyaman_dialog(entire-screen).jpg"
