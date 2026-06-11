@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 class GameState(Enum):
     TOURNAMENT_SELECTION = auto()
     CUTSCENE_SKIP = auto()
+    REGISTER_TEAM = auto()
     DONE = auto()
 
 
@@ -31,6 +32,8 @@ class StateMachine:
                 self._state_tournament_selection()
             elif self.state == GameState.CUTSCENE_SKIP:
                 self._state_cutscene_skip()
+            elif self.state == GameState.REGISTER_TEAM:
+                self._state_register_team()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -113,5 +116,45 @@ class StateMachine:
         self.inputs.press_button("Open Menu")
         human_delay()
 
-        logger.info("Cutscene skip complete. Stopping (next state TBD).")
+        logger.info("Cutscene skip complete.")
+        logger.info("Transition: Cutscene Skip -> Register Team")
+        self.state = GameState.REGISTER_TEAM
+
+    # --------------------------------------------------------------
+    # State 3: Register Team
+    # --------------------------------------------------------------
+    def _state_register_team(self) -> None:
+        """
+        Wait for Register Team button text, then press A to confirm.
+        Matcher: register_team_text.png
+        """
+        logger.info("Entering State 3: Register Team")
+
+        register_team = vision.wait_for_element(
+            config.TEMPLATE_REGISTER_TEAM_TEXT,
+            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            confidence=config.DEFAULT_CONFIDENCE,
+        )
+
+        if register_team is None:
+            logger.error(
+                "Register Team button not detected. Check template: %s",
+                config.TEMPLATE_REGISTER_TEAM_TEXT,
+            )
+            vision.save_debug_screenshot("state3_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_REGISTER_TEAM_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "Register Team found at %s - pressing Continue/Confirm (A)",
+            register_team,
+        )
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info("Register Team confirmed. Stopping (next state TBD).")
         self.state = GameState.DONE
