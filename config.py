@@ -43,6 +43,12 @@ ACTION_DELAY_MAX = 0.8
 # --------------------------------------------------------------
 USE_CONTROLLER = True  # True -> evdev/XInput path; False -> PyAutoGUI keyboard/mouse
 
+# Virtual gamepad created via UInput (shows in /proc/bus/input/devices)
+CONTROLLER_DEVICE_NAME = "sdbh-xp-farm-gamepad"
+
+# How long a virtual button stays pressed (seconds)
+CONTROLLER_BUTTON_HOLD = 0.08
+
 # --------------------------------------------------------------
 # Template filenames (must exist under templates/)
 # --------------------------------------------------------------
