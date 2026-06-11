@@ -25,10 +25,11 @@ FAILSAFE_ENABLED = True
 
 # Region of interest (x, y, width, height). None = full screen.
 # Useful to ignore overlays / letterboxing.
-SCREEN_REGION = None  # e.g. (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+# Steam Deck desktop = 1280x800. If game is windowed 1280x720, set window position.
+SCREEN_REGION = (0, 80, 1280, 720)  # e.g. (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 
 # Template matching defaults
-DEFAULT_CONFIDENCE = 0.8
+DEFAULT_CONFIDENCE = 0.65
 DEFAULT_WAIT_TIMEOUT = 10.0
 
 # Human-like delay ranges (seconds)
