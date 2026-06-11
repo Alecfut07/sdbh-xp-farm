@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 import mss
+from mss.tools import to_png
 
 import config
 
@@ -218,7 +219,8 @@ def save_debug_screenshot(filename: str = "debug_capture.png") -> Path:
         else:
             monitor = sct.monitors[1]
 
-        sct.shot(output=str(path), mon=monitor)
+        screenshot = sct.grab(monitor)
+        to_png(screenshot.rgb, screenshot.size, output=str(path))
 
     logger.info("Saved debug screenshot to %s", path)
     return path
