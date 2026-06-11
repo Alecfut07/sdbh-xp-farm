@@ -17,6 +17,7 @@ class GameState(Enum):
     CUTSCENE_SKIP = auto()
     REGISTER_TEAM = auto()
     CONFIRM_REGISTER_TEAM = auto()
+    SELECT_HERO_ROBO_ROUND = auto()
     DONE = auto()
 
 
@@ -37,6 +38,8 @@ class StateMachine:
                 self._state_register_team()
             elif self.state == GameState.CONFIRM_REGISTER_TEAM:
                 self._state_confirm_register_team()
+            elif self.state == GameState.SELECT_HERO_ROBO_ROUND:
+                self._state_select_hero_robo_round()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -198,5 +201,45 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info("Team registration confirmed. Stopping (next state TBD).")
+        logger.info("Team registration confirmed.")
+        logger.info("Transition: Confirm Register Team -> Select Hero Robo Round")
+        self.state = GameState.SELECT_HERO_ROBO_ROUND
+
+    # --------------------------------------------------------------
+    # State 5: Select Hero Robo Round
+    # --------------------------------------------------------------
+    def _state_select_hero_robo_round(self) -> None:
+        """
+        Wait for OK button on Super Hero Robo round selection screen, then press A.
+        Matcher: select_the_round_your_super_hero_robo_activates_text.png
+        """
+        logger.info("Entering State 5: Select Hero Robo Round (OK)")
+
+        ok_button = vision.wait_for_element(
+            config.TEMPLATE_SELECT_HERO_ROBO_ROUND_TEXT,
+            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            confidence=config.DEFAULT_CONFIDENCE,
+        )
+
+        if ok_button is None:
+            logger.error(
+                "OK button not detected. Check template: %s",
+                config.TEMPLATE_SELECT_HERO_ROBO_ROUND_TEXT,
+            )
+            vision.save_debug_screenshot("state5_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_SELECT_HERO_ROBO_ROUND_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "OK button found at %s - pressing Continue/Confirm (A)",
+            ok_button,
+        )
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info("Hero Robo round confirmed. Stopping (next state TBD).")
         self.state = GameState.DONE
