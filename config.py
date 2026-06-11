@@ -49,6 +49,9 @@ CONTROLLER_DEVICE_NAME = "sdbh-xp-farm-gamepad"
 # How long a virtual button stays pressed (seconds)
 CONTROLLER_BUTTON_HOLD = 0.08
 
+# "main" = Enter/Z/etc.  |  "sub" = B/L/etc. (from .cursorrules)
+KEYBOARD_LAYOUT = "main"
+
 # --------------------------------------------------------------
 # Template filenames (must exist under templates/)
 # --------------------------------------------------------------
