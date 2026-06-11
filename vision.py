@@ -168,7 +168,7 @@ def wait_for_all_elements(
     timeout: float = config.DEFAULT_WAIT_TIMEOUT,
     confidence: float = config.DEFAULT_CONFIDENCE,
     poll_interval: float = 0.25,
-) -> Optional[List[Point]]:
+) -> Optional[Dict[str, Point]]:
     f"""
     Block until ALL templates appear on screen simultaneously.
     Returns template_name: (x, y) or None on timeout.
@@ -188,7 +188,7 @@ def wait_for_all_elements(
 
             for name in template_names:
                 point = find_on_screen(name, confidence=confidence)
-                if point is not None:
+                if point is None:
                     all_found = False
                     break
                 matches[name] = point
