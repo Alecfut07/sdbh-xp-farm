@@ -21,6 +21,7 @@ class GameState(Enum):
     CONFIRM_HERO_ROBO_ROUND = auto()
     CONTINUE_HERO_ROBO_ROUND = auto()
     SET_ITEM_EXP = auto()
+    ACTIVATE_EXP_1_5_X = auto()
     DONE = auto()
 
 
@@ -49,6 +50,8 @@ class StateMachine:
                 self._state_continue_hero_robo_round()
             elif self.state == GameState.SET_ITEM_EXP:
                 self._state_set_item_exp()
+            elif self.state == GameState.ACTIVATE_EXP_1_5_X:
+                self._state_activate_exp_1_5_x()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -370,5 +373,45 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info("exp 1.5x item selected. Stopping (next state TBD).")
+        logger.info("exp 1.5x item selected.")
+        logger.info("Transition: Set Item EXP -> Activate EXP 1.5x")
+        self.state = GameState.DONE
+
+    # --------------------------------------------------------------
+    # State 9: Activate EXP 1.5x (arrow right)
+    # --------------------------------------------------------------
+    def _state_activate_exp_1_5_x(self) -> None:
+        """
+        Wait for arrow-right logo on exp 1.5x screen, then press D-pad Right.
+        Matcher: activate_exp_1_5_x_logo.png
+        """
+        logger.info("Entering State 9: Activate EXP 1.5x (arrow right)")
+
+        arrow_logo = vision.wait_for_element(
+            config.TEMPLATE_ACTIVATE_EXP_1_5_X_LOGO,
+            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            confidence=config.DEFAULT_CONFIDENCE,
+        )
+
+        if arrow_logo is None:
+            logger.error(
+                "Arrow right logo not detected. Check template: %s",
+                config.TEMPLATE_ACTIVATE_EXP_1_5_X_LOGO,
+            )
+            vision.save_debug_screenshot("state9_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_EXP_1_5_X_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "Arrow right logo found at %s - pressing Move Right (D-pad Right)",
+            arrow_logo,
+        )
+        self.inputs.press_button("Move Right")
+        human_delay()
+
+        logger.info("EXP 1.5x activated. Stopping (next state TBD).")
         self.state = GameState.DONE
