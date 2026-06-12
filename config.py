@@ -79,6 +79,7 @@ TEMPLATE_CONTINUE_HERO_ROBO_ROUND_TEXT = (
     "continue_the_round_your_super_hero_robo_activates_text.png"
 )
 TEMPLATE_SET_ITEM_EXP_LOGO = "set_item_exp_logo.png"
+TEMPLATE_ACTIVATE_EXP_1_5_X_LOGO = "activate_exp_1_5_x_logo.png"
 
 # Reference only — full-screen captures for manual debugging, not used at runtime
 TEMPLATE_SELECT_TOURNAMENT_FULL = "select_tournament(entire-screen).jpg"
@@ -95,3 +96,4 @@ TEMPLATE_CONTINUE_HERO_ROBO_ROUND_FULL = (
     "continue_the_round_your_super_hero_robo_activates(entire-screen).jpg"
 )
 TEMPLATE_SET_ITEM_EXP_FULL = "set_item_exp(entire-screen).jpg"
+TEMPLATE_EXP_1_5_X_FULL = "exp_1_5_x(entire-screen).jpg"
