@@ -24,6 +24,7 @@ def main() -> None:
         config.TEMPLATE_CONFIRM_HERO_ROBO_ROUND_TEXT,
         config.TEMPLATE_CONTINUE_HERO_ROBO_ROUND_TEXT,
         config.TEMPLATE_SET_ITEM_EXP_LOGO,
+        config.TEMPLATE_ACTIVATE_EXP_1_5_X_LOGO,
     ]
 
     for name in templates:
