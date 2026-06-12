@@ -24,6 +24,7 @@ class GameState(Enum):
     ACTIVATE_EXP_1_5_X = auto()
     CHANGE_EXP_TO_3_X = auto()
     SELECTED_EXP_3_X = auto()
+    FINISH_ITEM_SELECTED = auto()
     DONE = auto()
 
 
@@ -58,6 +59,8 @@ class StateMachine:
                 self._state_change_exp_to_3_x()
             elif self.state == GameState.SELECTED_EXP_3_X:
                 self._state_selected_exp_3_x()
+            elif self.state == GameState.FINISH_ITEM_SELECTED:
+                self._state_finish_item_selected()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -499,5 +502,49 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info("EXP 3x selection confirmed. Stopping (next state TBD).")
+        logger.info("EXP 3x selection confirmed.")
+        logger.info("Transition: Selected EXP 3x -> Finish Item Selected")
+        self.state = GameState.FINISH_ITEM_SELECTED
+
+    # ----------------------------------------------------------------
+    # State 12: Finish Item Selected (Finished -> D-pad Down, then A)
+    # ----------------------------------------------------------------
+    def _state_finish_item_selected(self) -> None:
+        """
+        Wait for "Finished" box, press D-pad Down to highlight, then press A.
+        Matcher: finish_item_selected_text.png
+        """
+        logger.info("Entering State 12: Finish Item Selected (Finished)")
+
+        finished_box = vision.wait_for_element(
+            config.TEMPLATE_FINISH_ITEM_SELECTED_TEXT,
+            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            confidence=config.DEFAULT_CONFIDENCE,
+        )
+
+        if finished_box is None:
+            logger.error(
+                "Finished box not detected. Check template: %s",
+                config.TEMPLATE_FINISH_ITEM_SELECTED_TEXT,
+            )
+            vision.save_debug_screenshot("state12_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_FINISH_ITEM_SELECTED_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "Finished box found at %s - pressing Move Down (D-pad Down)",
+            finished_box,
+        )
+        self.inputs.press_button("Move Down")
+        human_delay()
+
+        logger.info("Pressing Continue/Confirm (A)")
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info("Finish item confirmed. Stopping (next state TBD).")
         self.state = GameState.DONE
