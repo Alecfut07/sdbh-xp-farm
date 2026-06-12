@@ -80,6 +80,7 @@ TEMPLATE_CONTINUE_HERO_ROBO_ROUND_TEXT = (
 )
 TEMPLATE_SET_ITEM_EXP_LOGO = "set_item_exp_logo.png"
 TEMPLATE_ACTIVATE_EXP_1_5_X_LOGO = "activate_exp_1_5_x_logo.png"
+TEMPLATE_CHANGE_EXP_1_5_X_TO_3_X_LOGO = "change_exp_1_5_x_to_exp_3_x_logo.png"
 
 # Reference only — full-screen captures for manual debugging, not used at runtime
 TEMPLATE_SELECT_TOURNAMENT_FULL = "select_tournament(entire-screen).jpg"
