@@ -19,6 +19,7 @@ class GameState(Enum):
     CONFIRM_REGISTER_TEAM = auto()
     SELECT_HERO_ROBO_ROUND = auto()
     CONFIRM_HERO_ROBO_ROUND = auto()
+    CONTINUE_HERO_ROBO_ROUND = auto()
     SET_ITEM_EXP = auto()
     DONE = auto()
 
@@ -44,6 +45,8 @@ class StateMachine:
                 self._state_select_hero_robo_round()
             elif self.state == GameState.CONFIRM_HERO_ROBO_ROUND:
                 self._state_confirm_hero_robo_round()
+            elif self.state == GameState.CONTINUE_HERO_ROBO_ROUND:
+                self._state_continue_hero_robo_round()
             elif self.state == GameState.SET_ITEM_EXP:
                 self._state_set_item_exp()
             else:
@@ -288,18 +291,58 @@ class StateMachine:
         human_delay()
 
         logger.info("Hero Robo round registration confirmed.")
-        logger.info("Transition: Confirm Hero Robo Round -> Set Item EXP")
+        logger.info("Transition: Confirm Hero Robo Round -> Continue Hero Robo Round")
+        self.state = GameState.CONTINUE_HERO_ROBO_ROUND
+
+    # --------------------------------------------------------------
+    # State 7: Continue Hero Robo Round
+    # --------------------------------------------------------------
+    def _state_continue_hero_robo_round(self) -> None:
+        """
+        Wait for Continue button, then press A.
+        Matcher: continue_the_round_your_super_hero_robo_activates_text.png
+        """
+        logger.info("Entering State 7: Continue Hero Robo Round")
+
+        continue_button = vision.wait_for_element(
+            config.TEMPLATE_CONTINUE_HERO_ROBO_ROUND_TEXT,
+            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            confidence=config.DEFAULT_CONFIDENCE,
+        )
+
+        if continue_button is None:
+            logger.error(
+                "Continue button not detected. Check template: %s",
+                config.TEMPLATE_CONTINUE_HERO_ROBO_ROUND_TEXT,
+            )
+            vision.save_debug_screenshot("state7_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_CONTINUE_HERO_ROBO_ROUND_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "Continue button found at %s - pressing Continue/Confirm (A)",
+            continue_button,
+        )
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info("Continue confirmed.")
+        logger.info("Transition: Continue Hero Robo Round -> Set Item EXP")
         self.state = GameState.SET_ITEM_EXP
 
     # --------------------------------------------------------------
-    # State 7: Set Item EXP (1.5x logo)
+    # State 8: Set Item EXP (1.5x logo)
     # --------------------------------------------------------------
     def _state_set_item_exp(self) -> None:
         """
         Wait for exp 1.5x logo on Set Item EXP screen, then press A to select.
         Matcher: set_item_exp_logo.png
         """
-        logger.info("Entering State 7: Set Item EXP (1.5x logo)")
+        logger.info("Entering State 8: Set Item EXP (1.5x logo)")
 
         exp_logo = vision.wait_for_element(
             config.TEMPLATE_SET_ITEM_EXP_LOGO,
@@ -312,7 +355,7 @@ class StateMachine:
                 "exp 1.5x logo not detected. Check template: %s",
                 config.TEMPLATE_SET_ITEM_EXP_LOGO,
             )
-            vision.save_debug_screenshot("state7_fail.png")
+            vision.save_debug_screenshot("state8_fail.png")
             logger.info(
                 "Compare fail screenshot to reference: %s",
                 config.TEMPLATE_SET_ITEM_EXP_FULL,
