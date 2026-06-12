@@ -83,6 +83,7 @@ TEMPLATE_ACTIVATE_EXP_1_5_X_LOGO = "activate_exp_1_5_x_logo.png"
 TEMPLATE_CHANGE_EXP_1_5_X_TO_3_X_LOGO = "change_exp_1_5_x_to_exp_3_x_logo.png"
 TEMPLATE_SELECTED_EXP_3_X_TEXT = "selected_exp_3_x_text.png"
 TEMPLATE_FINISH_ITEM_SELECTED_TEXT = "finish_item_selected_text.png"
+TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT = "initial_round1_battle_setup_text.png"
 
 # Reference only — full-screen captures for manual debugging, not used at runtime
 TEMPLATE_SELECT_TOURNAMENT_FULL = "select_tournament(entire-screen).jpg"
@@ -102,3 +103,11 @@ TEMPLATE_SET_ITEM_EXP_FULL = "set_item_exp(entire-screen).jpg"
 TEMPLATE_EXP_1_5_X_FULL = "exp_1_5_x(entire-screen).jpg"
 TEMPLATE_SELECTED_EXP_3_X_FULL = "selected_exp_3_x(entire-screen).jpg"
 TEMPLATE_FINISH_ITEM_SELECTED_FULL = "finish_item_selected(entire-screen).jpg"
+TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_FULL = (
+    "initial_round1_battle_setup(entire-screen).jpg"
+)
+
+# State 13 - battle setup input sequence counts
+BATTLE_SETUP_DPAD_DOWN_COUNT = 6
+BATTLE_SETUP_DPAD_UP_COUNT = 6
+BATTLE_SETUP_DPAD_LEFT_COUNT = 2
