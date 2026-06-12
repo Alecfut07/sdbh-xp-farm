@@ -75,6 +75,9 @@ TEMPLATE_SELECT_HERO_ROBO_ROUND_TEXT = (
 TEMPLATE_CONFIRM_HERO_ROBO_ROUND_TEXT = (
     "confirm_the_round_your_super_hero_robo_activates_text.png"
 )
+TEMPLATE_CONTINUE_HERO_ROBO_ROUND_TEXT = (
+    "continue_the_round_your_super_hero_robo_activates_text.png"
+)
 TEMPLATE_SET_ITEM_EXP_LOGO = "set_item_exp_logo.png"
 
 # Reference only — full-screen captures for manual debugging, not used at runtime
@@ -87,5 +90,8 @@ TEMPLATE_SELECT_HERO_ROBO_ROUND_FULL = (
 )
 TEMPLATE_CONFIRM_HERO_ROBO_ROUND_FULL = (
     "confirm_the_round_your_super_hero_robo_activates(entire-screen).jpg"
+)
+TEMPLATE_CONTINUE_HERO_ROBO_ROUND_FULL = (
+    "continue_the_round_your_super_hero_robo_activates(entire-screen).jpg"
 )
 TEMPLATE_SET_ITEM_EXP_FULL = "set_item_exp(entire-screen).jpg"
