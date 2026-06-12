@@ -23,6 +23,7 @@ class GameState(Enum):
     SET_ITEM_EXP = auto()
     ACTIVATE_EXP_1_5_X = auto()
     CHANGE_EXP_TO_3_X = auto()
+    SELECTED_EXP_3_X = auto()
     DONE = auto()
 
 
@@ -55,6 +56,8 @@ class StateMachine:
                 self._state_activate_exp_1_5_x()
             elif self.state == GameState.CHANGE_EXP_TO_3_X:
                 self._state_change_exp_to_3_x()
+            elif self.state == GameState.SELECTED_EXP_3_X:
+                self._state_selected_exp_3_x()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -456,5 +459,45 @@ class StateMachine:
         self.inputs.press_button("Switch Tab (Left)")
         human_delay()
 
-        logger.info("EXP switched to 3x. Stopping (next state TBD).")
+        logger.info("EXP switched to 3x.")
+        logger.info("Transition: Change EXP to 3x -> Selected EXP 3x")
+        self.state = GameState.SELECTED_EXP_3_X
+
+    # --------------------------------------------------------------
+    # State 11: Selected EXP 3x
+    # --------------------------------------------------------------
+    def _state_selected_exp_3_x(self) -> None:
+        """
+        Wait for Selected box on 3x EXP screen, then press A.
+        Matcher: selected_exp_3_x_text.png
+        """
+        logger.info("Entering State 11: Selected EXP 3x")
+
+        selected_box = vision.wait_for_element(
+            config.TEMPLATE_SELECTED_EXP_3_X_TEXT,
+            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            confidence=config.DEFAULT_CONFIDENCE,
+        )
+
+        if selected_box is None:
+            logger.error(
+                "Selected box not detected. Check template: %s",
+                config.TEMPLATE_SELECTED_EXP_3_X_TEXT,
+            )
+            vision.save_debug_screenshot("state11_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_SELECTED_EXP_3_X_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "Selected box found at %s - pressing Continue/Confirm (A)",
+            selected_box,
+        )
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info("EXP 3x selection confirmed. Stopping (next state TBD).")
         self.state = GameState.DONE
