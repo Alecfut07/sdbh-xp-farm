@@ -22,6 +22,7 @@ class GameState(Enum):
     CONTINUE_HERO_ROBO_ROUND = auto()
     SET_ITEM_EXP = auto()
     ACTIVATE_EXP_1_5_X = auto()
+    CHANGE_EXP_TO_3_X = auto()
     DONE = auto()
 
 
@@ -52,6 +53,8 @@ class StateMachine:
                 self._state_set_item_exp()
             elif self.state == GameState.ACTIVATE_EXP_1_5_X:
                 self._state_activate_exp_1_5_x()
+            elif self.state == GameState.CHANGE_EXP_TO_3_X:
+                self._state_change_exp_to_3_x()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -413,5 +416,45 @@ class StateMachine:
         self.inputs.press_button("Move Right")
         human_delay()
 
-        logger.info("EXP 1.5x activated. Stopping (next state TBD).")
+        logger.info("EXP 1.5x activated.")
+        logger.info("Transition: Activate EXP 1.5x -> Change EXP to 3x")
+        self.state = GameState.CHANGE_EXP_TO_3_X
+
+    # --------------------------------------------------------------
+    # State 10: Change EXP 1.5x to 3x (Arrow Left Logo -> Press LB)
+    # --------------------------------------------------------------
+    def _state_change_exp_to_3_x(self) -> None:
+        """
+        Wait for arrow-left logo, then press LB to switch to 3x.
+        Matcher: change_exp_1_5_x_to_exp_3_x_logo.png
+        """
+        logger.info("Entering State 10: Change EXP to 3x (arrow left logo -> press LB)")
+
+        arrow_logo = vision.wait_for_element(
+            config.TEMPLATE_CHANGE_EXP_1_5_X_TO_3_X_LOGO,
+            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            confidence=config.DEFAULT_CONFIDENCE,
+        )
+
+        if arrow_logo is None:
+            logger.error(
+                "Arrow left logo not detected. Check template: %s",
+                config.TEMPLATE_CHANGE_EXP_1_5_X_TO_3_X_LOGO,
+            )
+            vision.save_debug_screenshot("state10_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_EXP_1_5_X_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "Arrow left logo found at %s - pressing Switch Tab (Left) (LB)",
+            arrow_logo,
+        )
+        self.inputs.press_button("Switch Tab (Left)")
+        human_delay()
+
+        logger.info("EXP switched to 3x. Stopping (next state TBD).")
         self.state = GameState.DONE
