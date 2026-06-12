@@ -375,7 +375,7 @@ class StateMachine:
 
         logger.info("exp 1.5x item selected.")
         logger.info("Transition: Set Item EXP -> Activate EXP 1.5x")
-        self.state = GameState.DONE
+        self.state = GameState.ACTIVATE_EXP_1_5_X
 
     # --------------------------------------------------------------
     # State 9: Activate EXP 1.5x (arrow right)
