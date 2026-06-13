@@ -28,6 +28,7 @@ def main() -> None:
         config.TEMPLATE_CHANGE_EXP_1_5_X_TO_3_X_LOGO,
         config.TEMPLATE_SELECTED_EXP_3_X_TEXT,
         config.TEMPLATE_FINISH_ITEM_SELECTED_TEXT,
+        config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
     ]
 
     for name in templates:
