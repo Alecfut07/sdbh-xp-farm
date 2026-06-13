@@ -550,7 +550,9 @@ class StateMachine:
         human_delay()
 
         logger.info("Finish item confirmed.")
-        logger.info("Transition: Finish Item Selected -> Initial Round 1 Battle Setup")
+        logger.info(
+            "Transition -> State 13 (expect ~60s battle load before 6000 appears)"
+        )
         self.state = GameState.INITIAL_ROUND1_BATTLE_SETUP
 
     def _press_repeated(self, action: str, count: int) -> None:
@@ -569,12 +571,16 @@ class StateMachine:
         Y -> Down x6 -> Y -> Up x6 -> RB -> Up x6 -> RB -> Left x2 -> A
         Matcher: initial_round1_battle_setup_text.png
         """
-        logger.info("Entering State 13: Initial Round 1 Battle Setup (6000)")
+        logger.info(
+            "Battle loading - waiting up to %0.0fs for 6000 screen (~60s typical)",
+            config.BATTLE_LOAD_TIMEOUT,
+        )
 
         setup_box = vision.wait_for_element(
             config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
-            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            timeout=config.BATTLE_LOAD_TIMEOUT,
             confidence=config.DEFAULT_CONFIDENCE,
+            poll_interval=config.BATTLE_LOAD_POLL_INTERVAL,
         )
 
         if setup_box is None:

@@ -107,6 +107,11 @@ TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_FULL = (
     "initial_round1_battle_setup(entire-screen).jpg"
 )
 
+# Long waits - battle load after State 12 presses A (~60s measured on Deck)
+BATTLE_LOAD_TIMEOUT = 90.0  # 60s load + 30s buffer
+BATTLE_LOAD_POLL_INTERVAL = 1.0  # check every 1s during wait
+BATTLE_LOAD_LOG_EVERY = 15.0  # log "still waiting..." every 15s
+
 # State 13 - battle setup input sequence counts
 BATTLE_SETUP_DPAD_DOWN_COUNT = 6
 BATTLE_SETUP_DPAD_UP_COUNT = 6
