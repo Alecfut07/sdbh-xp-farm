@@ -25,6 +25,7 @@ class GameState(Enum):
     CHANGE_EXP_TO_3_X = auto()
     SELECTED_EXP_3_X = auto()
     FINISH_ITEM_SELECTED = auto()
+    INITIAL_ROUND1_BATTLE_SETUP = auto()
     DONE = auto()
 
 
@@ -61,6 +62,8 @@ class StateMachine:
                 self._state_selected_exp_3_x()
             elif self.state == GameState.FINISH_ITEM_SELECTED:
                 self._state_finish_item_selected()
+            elif self.state == GameState.INITIAL_ROUND1_BATTLE_SETUP:
+                self._state_initial_round1_battle_setup()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -546,5 +549,98 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info("Finish item confirmed. Stopping (next state TBD).")
+        logger.info("Finish item confirmed.")
+        logger.info("Transition: Finish Item Selected -> Initial Round 1 Battle Setup")
+        self.state = GameState.INITIAL_ROUND1_BATTLE_SETUP
+
+    def _press_repeated(self, action: str, count: int) -> None:
+        """Press the same control action multiple times with human-like delays."""
+        for i in range(count):
+            logger.info("Repeated press %d/%d: %s", i + 1, count, action)
+            self.inputs.press_button(action)
+            human_delay()
+
+    # --------------------------------------------------------------
+    # State 13: Initial Round 1 Battle Setup
+    # --------------------------------------------------------------
+    def _state_initial_round1_battle_setup(self) -> None:
+        """
+        Wait for 6000 box, then run battle setup input sequence:
+        Y -> Down x6 -> Y -> Up x6 -> RB -> Up x6 -> RB -> Left x2 -> A
+        Matcher: initial_round1_battle_setup_text.png
+        """
+        logger.info("Entering State 13: Initial Round 1 Battle Setup (6000)")
+
+        setup_box = vision.wait_for_element(
+            config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
+            timeout=config.DEFAULT_WAIT_TIMEOUT,
+            confidence=config.DEFAULT_CONFIDENCE,
+        )
+
+        if setup_box is None:
+            logger.error(
+                "6000 box not detected. Check template: %s",
+                config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
+            )
+            vision.save_debug_screenshot("state13_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info("6000 box found at %s - starting battle setup sequence", setup_box)
+
+        # Y button
+        logger.info("Step 1: Select all cards (Y)")
+        self.inputs.press_button("Search/Sort")
+        human_delay()
+
+        # D-pad Down x6
+        logger.info(
+            "Step 2: Move down all cards x%d", config.BATTLE_SETUP_DPAD_DOWN_COUNT
+        )
+        self._press_repeated("Move Down", config.BATTLE_SETUP_DPAD_DOWN_COUNT)
+
+        # Y button
+        logger.info("Step 3: Select back to Gine (Y)")
+        self.inputs.press_button("Search/Sort")
+        human_delay()
+
+        # D-pad Up x6
+        logger.info(
+            "Step 4: Move Gine all the way up x%d", config.BATTLE_SETUP_DPAD_UP_COUNT
+        )
+        self._press_repeated("Move Up", config.BATTLE_SETUP_DPAD_UP_COUNT)
+
+        # RB button
+        logger.info("Step 5: Switch to Gogeta SSJ4 (RB)")
+        self.inputs.press_button("Switch Tab (Right)")
+        human_delay()
+
+        # D-pad Up x6
+        logger.info(
+            "Step 6: Move Gogeta SSJ4 all the way up x%d",
+            config.BATTLE_SETUP_DPAD_UP_COUNT,
+        )
+        self._press_repeated("Move Up", config.BATTLE_SETUP_DPAD_UP_COUNT)
+
+        # RB button
+        logger.info("Step 7: Switch to Vegeta (RB)")
+        self.inputs.press_button("Switch Tab (Right)")
+        human_delay()
+
+        # D-pad Left x2
+        logger.info(
+            "Step 8: Move Vegeta to the left x%d", config.BATTLE_SETUP_DPAD_LEFT_COUNT
+        )
+        self._press_repeated("Move Left", config.BATTLE_SETUP_DPAD_LEFT_COUNT)
+
+        # A button
+        logger.info("Step 9: Continue/Confirm (A)")
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info("Battle setup complete. Stopping (next state TBD).")
         self.state = GameState.DONE
