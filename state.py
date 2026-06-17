@@ -9,6 +9,8 @@ import config
 import vision
 from input_handler import InputHandler, human_delay
 
+import timing
+
 logger = logging.getLogger(__name__)
 
 
@@ -547,6 +549,7 @@ class StateMachine:
 
         logger.info("Pressing Continue/Confirm (A)")
         self.inputs.press_button("Continue/Confirm")
+        timing.mark_battle_load_start()
         human_delay()
 
         logger.info("Finish item confirmed.")
@@ -571,32 +574,38 @@ class StateMachine:
         Y -> Down x6 -> Y -> Up x6 -> RB -> Up x6 -> RB -> Left x2 -> A
         Matcher: initial_round1_battle_setup_text.png
         """
-        logger.info(
-            "Battle loading - waiting up to %0.0fs for 6000 screen (~60s typical)",
-            config.BATTLE_LOAD_TIMEOUT,
-        )
+        timeout = timing.get_battle_load_timeout()
+        logger.info("Battle loading - waiting up to %.0fs for 6000 screen", timeout)
 
         setup_box = vision.wait_for_element(
             config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
-            timeout=config.BATTLE_LOAD_TIMEOUT,
+            timeout=timeout,
             confidence=config.DEFAULT_CONFIDENCE,
             poll_interval=config.BATTLE_LOAD_POLL_INTERVAL,
         )
 
         if setup_box is None:
+            elapsed = timing.mark_battle_load_end(found=False)
             logger.error(
-                "6000 box not detected. Check template: %s",
+                "6000 box not detected after %.1fs. Check template: %s",
+                elapsed or timeout,
                 config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
             )
             vision.save_debug_screenshot("state13_fail.png")
-            logger.info(
-                "Compare fail screenshot to reference: %s",
-                config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_FULL,
-            )
             self.state = GameState.DONE
             return
 
-        logger.info("6000 box found at %s - starting battle setup sequence", setup_box)
+        elapsed = timing.mark_battle_load_end(found=True)
+        logger.info(
+            "6000 found at %s after %.2fs - starting battle setup sequence",
+            setup_box,
+            elapsed or 0,
+        )
+
+        if config.BATTLE_LOAD_MEASURE_ONLY:
+            logger.info("BATTLE_LOAD_MEASURE_ONLY=True - stopping after measurement")
+            self.state = GameState.DONE
+            return
 
         # Y button
         logger.info("Step 1: Select all cards (Y)")
