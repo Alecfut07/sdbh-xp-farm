@@ -16,7 +16,7 @@ _battle_load_start: Optional[float] = None
 
 
 def mark_battle_load_start() -> None:
-    """Call right after State 12 presses A."""
+    """Call right after State 12 presses A (starts battle load timer)."""
     global _battle_load_start
     _battle_load_start = time.monotonic()
     logger.info("Battle load timer started (State 12 A pressed)")
@@ -24,7 +24,7 @@ def mark_battle_load_start() -> None:
 
 def mark_battle_load_end(found: bool) -> Optional[float]:
     """
-    Call when State 13 finds (or fails to find) 6000.
+    Call when State 13 finds (or fails to find) the Confirm button.
     Returns elapsed seconds, or None if start was never marked.
     """
     global _battle_load_start

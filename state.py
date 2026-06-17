@@ -554,7 +554,7 @@ class StateMachine:
 
         logger.info("Finish item confirmed.")
         logger.info(
-            "Transition -> State 13 (expect ~60s battle load before 6000 appears)"
+            "Transition -> State 13 (battle load, then wait for Confirm button)"
         )
         self.state = GameState.INITIAL_ROUND1_BATTLE_SETUP
 
@@ -570,17 +570,25 @@ class StateMachine:
     # --------------------------------------------------------------
     def _state_initial_round1_battle_setup(self) -> None:
         """
-        Wait for 6000 box, then run battle setup input sequence:
-        Y -> Down x6 -> Y -> Up x6 -> RB -> Up x6 -> RB -> Left x2 -> A
-        Matcher: initial_round1_battle_setup_text.png
+        Wait for Confirm button on battle setup screen, then run card setup sequence.
+        Matcher: initial_round1_battle_setup_text.png (Confirm circle button)
+        Sequence: Y -> Down x6 -> Y -> Up x6 -> RB -> Up x6 -> RB -> Left x2 -> A
         """
         timeout = timing.get_battle_load_timeout()
-        logger.info("Battle loading - waiting up to %.0fs for 6000 screen", timeout)
+        confidence = getattr(
+            config, "STATE13_CONFIRM_CONFIDENCE", config.DEFAULT_CONFIDENCE
+        )
+
+        logger.info(
+            "Battle loading - waiting up to %.0fs for Confirm button (confidence=%.2f)",
+            timeout,
+            confidence,
+        )
 
         setup_box = vision.wait_for_element(
             config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
             timeout=timeout,
-            confidence=config.DEFAULT_CONFIDENCE,
+            confidence=confidence,
             poll_interval=config.BATTLE_LOAD_POLL_INTERVAL,
         )
 
@@ -592,12 +600,16 @@ class StateMachine:
                 config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
             )
             vision.save_debug_screenshot("state13_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_FULL,
+            )
             self.state = GameState.DONE
             return
 
         elapsed = timing.mark_battle_load_end(found=True)
         logger.info(
-            "6000 found at %s after %.2fs - starting battle setup sequence",
+            "Confirm button found at %s after %.2fs - starting battle setup sequence",
             setup_box,
             elapsed or 0,
         )

@@ -1,4 +1,4 @@
-"""Calibration: measure State 12 -> 13 load time without running setup sequence."""
+"""Calibration: measure State 12 -> 13 load time until Confirm button appears."""
 
 import config
 

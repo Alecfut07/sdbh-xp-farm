@@ -107,12 +107,17 @@ TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_FULL = (
     "initial_round1_battle_setup(entire-screen).jpg"
 )
 
-# Battle load timing (State 12 A press -> State 13 "6000" visible)
+# Battle load timing (State 12 A press -> State 13 Confirm button visible)
 BATTLE_LOAD_TIMEOUT = 120.0  # fallback until history exists
 BATTLE_LOAD_TIMEOUT_BUFFER = 30.0  # added on top of max measured time
 BATTLE_LOAD_MIN_TIMEOUT = 90.0  # never wait less than this
 BATTLE_LOAD_POLL_INTERVAL = 1.0
 BATTLE_LOAD_LOG_EVERY = 15.0
+BATTLE_LOAD_MEASURE_ONLY = False
+BATTLE_LOAD_TIMES_FILE = LOGS_DIR / "battle_load_times.json"
+
+# Optional: lower if Confirm match is flaky during animations.
+STATE13_CONFIRM_CONFIDENCE = 0.65  # or 0.60 while tuning
 
 # Set True for calibration runs: find 6000, log time, stop (no setup sequence)
 BATTLE_LOAD_MEASURE_ONLY = False
