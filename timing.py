@@ -24,7 +24,7 @@ def mark_battle_load_start() -> None:
 
 def mark_battle_load_end(found: bool) -> Optional[float]:
     """
-    Call when State 13 finds (or fails to find) the Confirm button.
+    Call when State 13 finds (or fails to find) the Select All button.
     Returns elapsed seconds, or None if start was never marked.
     """
     global _battle_load_start

@@ -117,7 +117,7 @@ BATTLE_LOAD_MEASURE_ONLY = False
 BATTLE_LOAD_TIMES_FILE = LOGS_DIR / "battle_load_times.json"
 
 # Optional: lower if Confirm match is flaky during animations.
-STATE13_CONFIRM_CONFIDENCE = 0.65  # or 0.60 while tuning
+STATE13_SELECT_ALL_CONFIDENCE = 0.65  # or 0.60 while tuning
 
 # Set True for calibration runs: find 6000, log time, stop (no setup sequence)
 BATTLE_LOAD_MEASURE_ONLY = False

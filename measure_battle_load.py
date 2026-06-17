@@ -1,4 +1,4 @@
-"""Calibration: measure State 12 -> 13 load time until Confirm button appears."""
+"""Calibration: measure State 12 -> 13 load time until Select All button appears."""
 
 import config
 

@@ -570,17 +570,17 @@ class StateMachine:
     # --------------------------------------------------------------
     def _state_initial_round1_battle_setup(self) -> None:
         """
-        Wait for Confirm button on battle setup screen, then run card setup sequence.
-        Matcher: initial_round1_battle_setup_text.png (Confirm circle button)
+        Wait for Select All button on battle setup screen, then run card setup sequence.
+        Matcher: initial_round1_battle_setup_text.png (Select All button)
         Sequence: Y -> Down x6 -> Y -> Up x6 -> RB -> Up x6 -> RB -> Left x2 -> A
         """
         timeout = timing.get_battle_load_timeout()
         confidence = getattr(
-            config, "STATE13_CONFIRM_CONFIDENCE", config.DEFAULT_CONFIDENCE
+            config, "STATE13_SELECT_ALL_CONFIDENCE", config.DEFAULT_CONFIDENCE
         )
 
         logger.info(
-            "Battle loading - waiting up to %.0fs for Confirm button (confidence=%.2f)",
+            "Battle loading - waiting up to %.0fs for Select All button (confidence=%.2f)",
             timeout,
             confidence,
         )
@@ -595,7 +595,7 @@ class StateMachine:
         if setup_box is None:
             elapsed = timing.mark_battle_load_end(found=False)
             logger.error(
-                "6000 box not detected after %.1fs. Check template: %s",
+                "Select All button not detected after %.1fs. Check template: %s",
                 elapsed or timeout,
                 config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
             )
@@ -609,7 +609,7 @@ class StateMachine:
 
         elapsed = timing.mark_battle_load_end(found=True)
         logger.info(
-            "Confirm button found at %s after %.2fs - starting battle setup sequence",
+            "Select All found at %s after %.2fs - starting battle setup sequence",
             setup_box,
             elapsed or 0,
         )
