@@ -1,7 +1,20 @@
 """Tune State 13 Select All detection - run with battle setup screen visible."""
 
+import time
+
 import config
 import vision
+
+
+def startup_countdown() -> None:
+    """Give time to focus the game window before capture."""
+    seconds = getattr(config, "STARTUP_COUNTDOWN_SECONDS", 5)
+    print(f"Focus the game window - Select All screen visible in bottom-right.")
+    for i in range(seconds, 0, -1):
+        print(f"  Starting in {i}...")
+        time.sleep(1)
+    print("Capturing now...")
+    print()
 
 
 def main() -> None:
@@ -11,16 +24,24 @@ def main() -> None:
     print("=== State 13 diagnose (Select All) ===")
     print(f"SCREEN_REGION: {config.SCREEN_REGION}")
     print(f"STATE13_SEARCH_REGION: {getattr(config, 'STATE13_SEARCH_REGION', None)}")
+    print(
+        f"STARTUP_COUNTDOWN_SECONDS: {getattr(config, "STARTUP_COUNTDOWN_SECONDS", 5)}"
+    )
     print()
+
+    startup_countdown()
+
     path = vision.save_debug_screenshot("diagnose_state13_full.png")
     print(f"Saved: {path}")
     print()
+
     print("--- Full screen search ---")
     score_full = vision.log_best_match(template, confidence)
     point_full = vision.find_on_screen(template, confidence=confidence)
     print(f"  Score: {score_full:.3f}  PASS: {score_full >= confidence}")
     print(f"  Point: {point_full}")
     print()
+
     region = getattr(config, "STATE13_SEARCH_REGION", None)
     if region:
         print("--- Bottom-right region search ---")
@@ -31,6 +52,7 @@ def main() -> None:
         print(f"  Score: {score_reg:.3f}  PASS: {score_reg >= confidence}")
         print(f"  Point: {point_reg}")
         print()
+
     print("If both FAIL:")
     print("  1. Open diagnose_state13_full.png")
     print("  2. Re-crop initial_round1_battle_setup_text.png from that image")
