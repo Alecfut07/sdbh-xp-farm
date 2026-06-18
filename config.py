@@ -108,16 +108,23 @@ TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_FULL = (
 )
 
 # Battle load timing (State 12 A press -> State 13 Confirm button visible)
-BATTLE_LOAD_TIMEOUT = 120.0  # fallback until history exists
-BATTLE_LOAD_TIMEOUT_BUFFER = 30.0  # added on top of max measured time
-BATTLE_LOAD_MIN_TIMEOUT = 90.0  # never wait less than this
+BATTLE_LOAD_TIMEOUT = 180.0  # fallback until history exists
+BATTLE_LOAD_TIMEOUT_BUFFER = 45.0  # added on top of max measured time
+BATTLE_LOAD_MIN_TIMEOUT = 120.0  # never wait less than this
 BATTLE_LOAD_POLL_INTERVAL = 1.0
 BATTLE_LOAD_LOG_EVERY = 15.0
 BATTLE_LOAD_MEASURE_ONLY = False
 BATTLE_LOAD_TIMES_FILE = LOGS_DIR / "battle_load_times.json"
 
-# Optional: lower if Confirm match is flaky during animations.
-STATE13_SELECT_ALL_CONFIDENCE = 0.65  # or 0.60 while tuning
+# State 13 - Select All in bottom-right (relative to SCREEN_REGION game window)
+# Tune with diagnose_state13.py - (left, top, width, height) within 1280x720 capture.
+STATE13_SEARCH_REGION = (850, 580, 430, 140)
+
+# Lower confidence for small text button (tune after diagnose)
+STATE13_SELECT_ALL_CONFIDENCE = 0.55
+
+# Save a screenshot every N seconds while waiting (0 = disabled)
+BATTLE_LOAD_SNAPSHOT_EVERY = 0
 
 # Set True for calibration runs: find 6000, log time, stop (no setup sequence)
 BATTLE_LOAD_MEASURE_ONLY = False

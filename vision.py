@@ -51,11 +51,14 @@ def load_template(template_name: str) -> np.ndarray:
     return img
 
 
-def _capture_screen_gray() -> np.ndarray:
+def _capture_screen_gray(
+    region: Optional[Tuple[int, int, int, int]] = None,
+) -> np.ndarray:
     """Grab the screen (or region) and return a grayscale numpy array."""
+    capture_region = region or config.SCREEN_REGION
     with mss.mss() as sct:
-        if config.SCREEN_REGION:
-            left, top, width, height = config.SCREEN_REGION
+        if capture_region:
+            left, top, width, height = capture_region
             monitor = {"left": left, "top": top, "width": width, "height": height}
         else:
             monitor = sct.monitors[1]  # primary display
@@ -67,14 +70,15 @@ def _capture_screen_gray() -> np.ndarray:
 def find_on_screen(
     template_name: str,
     confidence: float = config.DEFAULT_CONFIDENCE,
+    region: Optional[Tuple[int, int, int, int]] = None,
 ) -> Optional[Point]:
     """
-    Find template on screen via matchTemplate.
-    Returns center (x, y) or None if below confidence threshold.
+    Find template on screen. Returns center (x, y) in full-sccreen coords, or None.
+    `region` limits search area; returned coords are offset back to full capture space.
     """
     try:
         template = load_template(template_name)
-        screen = _capture_screen_gray()
+        screen = _capture_screen_gray(region)
 
         if template.shape[0] > screen.shape[0] or template.shape[1] > screen.shape[1]:
             logger.warning(
@@ -90,19 +94,24 @@ def find_on_screen(
         result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
+        offset_x = region[0] if region else 0
+        offset_y = region[1] if region else 0
+
         logger.debug(
-            "find_on_screen(%s): best match %.3f (threshold %.3f)",
+            "find_on_screen(%s%s): best match %.3f (threshold %.3f) at local %s",
             template_name,
+            f" region={region}" if region else "",
             max_val,
             confidence,
+            max_loc,
         )
 
         if max_val < confidence:
             return None
 
         h, w = template.shape[:2]
-        center_x = max_loc[0] + w // 2
-        center_y = max_loc[1] + h // 2
+        center_x = offset_x + max_loc[0] + w // 2
+        center_y = offset_y + max_loc[1] + h // 2
         return (center_x, center_y)
 
     except Exception:
@@ -154,27 +163,39 @@ def save_debug_screenshot(filename: str = "debug_capture.png") -> Path:
 
 
 def log_best_match(
-    template_name: str, confidence: float = config.DEFAULT_CONFIDENCE
+    template_name: str,
+    confidence: float = config.DEFAULT_CONFIDENCE,
+    region: Optional[Tuple[int, int, int, int]] = None,
 ) -> float:
     """Log the best template match score without requiring a pass."""
     try:
         template = load_template(template_name)
-        screen = _capture_screen_gray()
+        screen = _capture_screen_gray(region)
+        offset_x = region[0] if region else 0
+        offset_y = region[1] if region else 0
+
         logger.info(
-            "Capture size: %dx%d | Template %s: %dx%d",
+            "Search area: %dx%d (offset %d,%d) | Template %s: %dx%d",
             screen.shape[1],
             screen.shape[0],
+            offset_x,
+            offset_y,
             template_name,
             template.shape[1],
             template.shape[0],
         )
         result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
+
+        global_x = offset_x + max_loc[0]
+        global_y = offset_y + max_loc[1]
+
         logger.info(
-            "Best match for %s: %.3f at %s (threshold %.3f)",
+            "Best match for %s: %.3f at (%d, %d) (threshold %.3f)",
             template_name,
             max_val,
-            max_loc,
+            global_x,
+            global_y,
             confidence,
         )
         return float(max_val)
@@ -188,29 +209,41 @@ def wait_for_element(
     timeout: float = config.DEFAULT_WAIT_TIMEOUT,
     confidence: float = config.DEFAULT_CONFIDENCE,
     poll_interval: float = 0.25,
+    region: Optional[Tuple[int, int, int, int]] = None,
+    snapshot_every: float = 0.0,
 ) -> Optional[Point]:
     """Block until template appears or timeout expires."""
     logger.info(
-        "Waiting for %s (timeout=%.1fs, confidence=%.2f)",
+        "Waiting for %s (timeout=%.1fs, confidence=%.2f, region=%s)",
         template_name,
         timeout,
         confidence,
+        region,
     )
     deadline = time.monotonic() + timeout
+    next_snapshot = (
+        time.monotonic() + snapshot_every if snapshot_every > 0 else float("inf")
+    )
 
     while time.monotonic() < deadline:
         try:
-            point = find_on_screen(template_name, confidence=confidence)
+            point = find_on_screen(template_name, confidence=confidence, region=region)
             if point is not None:
                 logger.info("Found %s at %s", template_name, point)
                 return point
         except Exception:
             logger.exception("Error while waiting for %s", template_name)
 
+        now = time.monotonic()
+        if now >= next_snapshot:
+            save_debug_screenshot(f"battle_load_wait_{int(now)}.png")
+            log_best_match(template_name, confidence, region=region)
+            next_snapshot = now + snapshot_every
+
         time.sleep(poll_interval)
 
     logger.warning("Timed out waiting for %s", template_name)
-    log_best_match(template_name, confidence)
+    log_best_match(template_name, confidence, region=region)
     save_debug_screenshot(f"wait_timeout_{template_name}.png")
     return None
 

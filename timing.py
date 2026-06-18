@@ -84,6 +84,10 @@ def get_battle_load_timeout() -> float:
         history = json.loads(path.read_text(encoding="utf-8"))
         successful = [r["elapsed_s"] for r in history if r.get("found")]
         if not successful:
+            logger.info(
+                "No successful battle load measurements - using fallback timeout %.0fs",
+                config.BATTLE_LOAD_TIMEOUT,
+            )
             return config.BATTLE_LOAD_TIMEOUT
 
         max_measured = max(successful)

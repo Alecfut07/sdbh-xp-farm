@@ -578,18 +578,24 @@ class StateMachine:
         confidence = getattr(
             config, "STATE13_SELECT_ALL_CONFIDENCE", config.DEFAULT_CONFIDENCE
         )
+        search_region = getattr(config, "STATE13_SEARCH_REGION", None)
+        snapshot_every = getattr(config, "BATTLE_LOAD_SNAPSHOT_EVERY", 0.0)
 
         logger.info(
-            "Battle loading - waiting up to %.0fs for Select All button (confidence=%.2f)",
+            "Battle loading - waiting up to %.0fs for Select All button (bottom-right, confidence=%.2f)",
             timeout,
             confidence,
         )
+        if search_region:
+            logger.info("State 13 search region: %s", search_region)
 
         setup_box = vision.wait_for_element(
             config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
             timeout=timeout,
             confidence=confidence,
             poll_interval=config.BATTLE_LOAD_POLL_INTERVAL,
+            region=search_region,
+            snapshot_every=snapshot_every,
         )
 
         if setup_box is None:
