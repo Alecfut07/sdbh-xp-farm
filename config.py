@@ -26,7 +26,7 @@ FAILSAFE_ENABLED = True
 # Region of interest (x, y, width, height). None = full screen.
 # Useful to ignore overlays / letterboxing.
 # Steam Deck desktop = 1280x800. If game is windowed 1280x720, set window position.
-SCREEN_REGION = (0, 80, 1280, 720)  # e.g. (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+SCREEN_REGION = None  # e.g. (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 
 # Template matching defaults
 DEFAULT_CONFIDENCE = 0.65
@@ -118,7 +118,7 @@ BATTLE_LOAD_TIMES_FILE = LOGS_DIR / "battle_load_times.json"
 
 # State 13 - Select All in bottom-right (relative to SCREEN_REGION game window)
 # Tune with diagnose_state13.py - (left, top, width, height) within 1280x720 capture.
-STATE13_SEARCH_REGION = (850, 580, 430, 140)
+STATE13_SEARCH_REGION = None
 
 # Lower confidence for small text button (tune after diagnose)
 STATE13_SELECT_ALL_CONFIDENCE = 0.55
