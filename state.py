@@ -10,6 +10,7 @@ import vision
 from input_handler import InputHandler, human_delay
 
 import timing
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -554,7 +555,8 @@ class StateMachine:
 
         logger.info("Finish item confirmed.")
         logger.info(
-            "Transition -> State 13 (battle load, then wait for Confirm button)"
+            "Transition -> State 13 (fixed wait %.0fs, then battle setup)",
+            config.BATTLE_LOAD_FIXED_WAIT_SECONDS,
         )
         self.state = GameState.INITIAL_ROUND1_BATTLE_SETUP
 
@@ -570,58 +572,38 @@ class StateMachine:
     # --------------------------------------------------------------
     def _state_initial_round1_battle_setup(self) -> None:
         """
-        Wait for Select All button on battle setup screen, then run card setup sequence.
-        Matcher: initial_round1_battle_setup_text.png (Select All button)
+        Approach 1: fixed blind wait after State 12 A press.
         Sequence: Y -> Down x6 -> Y -> Up x6 -> RB -> Up x6 -> RB -> Left x2 -> A
         """
-        timeout = timing.get_battle_load_timeout()
-        confidence = getattr(
-            config, "STATE13_SELECT_ALL_CONFIDENCE", config.DEFAULT_CONFIDENCE
-        )
-        search_region = getattr(config, "STATE13_SEARCH_REGION", None)
-        snapshot_every = getattr(config, "BATTLE_LOAD_SNAPSHOT_EVERY", 0.0)
+        logger.info("Entering State 13: Initial Round 1 Battle Setup")
 
+        wait_s = config.BATTLE_LOAD_FIXED_WAIT_SECONDS
         logger.info(
-            "Battle loading - waiting up to %.0fs for Select All button (bottom-right, confidence=%.2f)",
-            timeout,
-            confidence,
-        )
-        if search_region:
-            logger.info("State 13 search region: %s", search_region)
-
-        setup_box = vision.wait_for_element(
-            config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
-            timeout=timeout,
-            confidence=confidence,
-            poll_interval=config.BATTLE_LOAD_POLL_INTERVAL,
-            region=search_region,
-            snapshot_every=snapshot_every,
+            "Batle load: fixed blind wait %.0fs (no template detection)", wait_s
         )
 
-        if setup_box is None:
-            elapsed = timing.mark_battle_load_end(found=False)
-            logger.error(
-                "Select All button not detected after %.1fs. Check template: %s",
-                elapsed or timeout,
-                config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_TEXT,
-            )
-            vision.save_debug_screenshot("state13_fail.png")
-            logger.info(
-                "Compare fail screenshot to reference: %s",
-                config.TEMPLATE_INITIAL_ROUND1_BATTLE_SETUP_FULL,
-            )
-            self.state = GameState.DONE
-            return
+        # Optional: log progress every 15s while waiting
+        log_every = getattr(config, "BATTLE_LOAD_LOG_EVERY", 15.0)
+        elapsed = 0.0
+        while elapsed < wait_s:
+            chunk = min(log_every, wait_s - elapsed)
+            time.sleep(chunk)
+            elapsed += chunk
+            if elapsed < wait_s:
+                logger.info(
+                    "Still waiting for battle setup... %.0fs / %.0fs",
+                    elapsed,
+                    wait_s,
+                )
 
-        elapsed = timing.mark_battle_load_end(found=True)
+        total_elapsed = timing.mark_battle_load_end(found=True)
         logger.info(
-            "Select All found at %s after %.2fs - starting battle setup sequence",
-            setup_box,
-            elapsed or 0,
+            "Fixed wait complete (%.2fs) - starting battle setup sequence",
+            total_elapsed or wait_s,
         )
 
         if config.BATTLE_LOAD_MEASURE_ONLY:
-            logger.info("BATTLE_LOAD_MEASURE_ONLY=True - stopping after measurement")
+            logger.info("BATTLE_LOAD_MEASURE_ONLY=True - stopping after wait")
             self.state = GameState.DONE
             return
 
