@@ -658,6 +658,7 @@ class StateMachine:
         # A button
         logger.info("Step 9: Continue/Confirm (A)")
         self.inputs.press_button("Continue/Confirm")
+        timing.mark_aim_phase_start()
         human_delay()
 
         logger.info("Battle setup complete.")
@@ -746,9 +747,17 @@ class StateMachine:
         )
         if aim_point is None:
             elapsed = timing.mark_aim_phase_end(found=False)
+            score = vision.log_best_match(
+                config.TEMPLATE_AIM_FOR_ENEMY_TEXT,
+                config.STATE14_AIM_CONFIDENCE,
+            )
             logger.error(
-                "aim_for_enemy_text not visible after wait (%.1fs). Check template: %s",
+                "aim_for_enemy_text not visible after wait (%.1fs).",
+                "Best score=%.3f (need%.2f). Template: %s",
                 elapsed or 0,
+                score,
+                config.STATE14_AIM_CONFIDENCE,
+                config.TEMPLATE_AIM_FOR_ENEMY_TEXT,
             )
             vision.save_debug_screenshot("state14_aim_fail.png")
             self.state = GameState.DONE

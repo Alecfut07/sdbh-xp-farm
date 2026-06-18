@@ -38,11 +38,11 @@ def mark_battle_load_end(found: bool) -> Optional[float]:
     status = "found" if found else "timeout"
     logger.info("Battle load timer ended (%s): %.2f seconds", status, elapsed)
 
-    _append_measurement(elapsed, found)
+    _append_battle_load_measurement(elapsed, found)
     return elapsed
 
 
-def _append_measurement(elapsed: float, found: bool) -> None:
+def _append_battle_load_measurement(elapsed: float, found: bool) -> None:
     path = config.BATTLE_LOAD_TIMES_FILE
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -156,11 +156,11 @@ def mark_aim_phase_end(found: bool) -> Optional[float]:
     status = "found" if found else "timeout"
     logger.info("Aim phase timer ended (%s): %.2f seconds", status, elapsed)
 
-    _append_measurement(elapsed, found)
+    _append_aim_phase_measurement(elapsed, found)
     return elapsed
 
 
-def _append_measurement(elapsed: float, found: bool) -> None:
+def _append_aim_phase_measurement(elapsed: float, found: bool) -> None:
     path = config.AIM_PHASE_TIMES_FILE
     path.parent.mkdir(parents=True, exist_ok=True)
 
