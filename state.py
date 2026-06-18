@@ -662,7 +662,7 @@ class StateMachine:
 
         logger.info("Battle setup complete.")
         logger.info("Transition: State 13 -> State 14 (Aim for Enemy)")
-        self.state = GameState.DONE
+        self.state = GameState.AIM_FOR_ENEMY
 
     def _detect_target_lock_state(self) -> str:
         """
@@ -776,7 +776,7 @@ class StateMachine:
             logger.info(
                 "Target not locked - pressing D-pad Left x%d then A",
                 config.AIM_TARGET_NOT_LOCKED_LEFT_COUNT,
-            ),
+            )
             self._press_repeated("Move Left", config.AIM_TARGET_NOT_LOCKED_LEFT_COUNT)
             self.inputs.press_button("Continue/Confirm")
             human_delay()
