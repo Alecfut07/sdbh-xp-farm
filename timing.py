@@ -131,3 +131,94 @@ def print_battle_load_stats() -> None:
     if failed:
         print(f"  Timeouts: {len(failed)}")
     print(f"  Full log: {path}")
+
+
+_aim_phase_start: Optional[float] = None
+
+
+def mark_aim_phase_start() -> None:
+    """Call right after State 13 final A press."""
+    global _aim_phase_start
+    _aim_phase_start = time.monotonic()
+    logger.info("Aim phase timer started (State 13 A pressed)")
+
+
+def mark_aim_phase_end(found: bool) -> Optional[float]:
+    """Call when State 14 detects aim mode (or times out)."""
+    global _aim_phase_start
+    if _aim_phase_start is None:
+        logger.warning("Aim phase timer was never started")
+        return None
+
+    elapsed = time.monotonic() - _aim_phase_start
+    _aim_phase_start = None
+
+    status = "found" if found else "timeout"
+    logger.info("Aim phase timer ended (%s): %.2f seconds", status, elapsed)
+
+    _append_measurement(elapsed, found)
+    return elapsed
+
+
+def _append_measurement(elapsed: float, found: bool) -> None:
+    path = config.AIM_PHASE_TIMES_FILE
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    history: list = []
+    if path.exists():
+        try:
+            history = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            logger.exception("Could not read %s - starting fresh", path)
+
+    history.append(
+        {
+            "elapsed_s": round(elapsed, 2),
+            "found": found,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+    )
+    history = history[-20:]
+    path.write_text(json.dumps(history, indent=2), encoding="utf-8")
+    logger.info("Saved aim phase measurement to %s", path)
+
+
+def get_aim_phase_fixed_wait_seconds() -> float:
+    """Adaptive fixed wait from successful measurements."""
+    path = config.AIM_PHASE_TIMES_FILE
+    if not path.exists():
+        return config.AIM_PHASE_FIXED_WAIT_SECONDS
+
+    try:
+        history = json.loads(path.read_text(encoding="utf-8"))
+        successful = [r["elapsed_s"] for r in history if r.get("found")]
+        if not successful:
+            return config.AIM_PHASE_FIXED_WAIT_SECONDS
+
+        return max(
+            config.AIM_PHASE_MIN_TIMEOUT,
+            max(successful) + config.AIM_PHASE_TIMEOUT_BUFFER,
+        )
+    except Exception:
+        logger.exception("Failed to read aim phase history")
+        return config.AIM_PHASE_FIXED_WAIT_SECONDS
+
+
+def print_aim_phase_stats() -> None:
+    path = config.AIM_PHASE_TIMES_FILE
+    if not path.exists():
+        print("No aim phase measurements yet.")
+        return
+
+    history = json.loads(path.read_text(encoding="utf-8"))
+    successful = [r["elapsed_s"] for r in history if r.get("found")]
+
+    print(f"=== Aim phase stats ({len(history)} runs) ===")
+    if successful:
+        print(
+            f"  Min: {min(successful):.1f}s Max: {max(successful):.1f}s Avg: {sum(successful)/len(successful):.1f}s"
+        )
+        print(
+            f"  Recommended fixed wait: {max(successful) + config.AIM_PHASE_TIMEOUT_BUFFER:.0f}s"
+        )
+    print(f"  Full log: {path}")

@@ -139,3 +139,35 @@ BATTLE_LOAD_TIMES_FILE = LOGS_DIR / "battle_load_times.json"
 BATTLE_SETUP_DPAD_DOWN_COUNT = 6
 BATTLE_SETUP_DPAD_UP_COUNT = 6
 BATTLE_SETUP_DPAD_LEFT_COUNT = 2
+
+# State 14 - Aim for Enemy
+TEMPLATE_AIM_FOR_ENEMY_TEXT = "aim_for_enemy_text.png"
+TEMPLATE_TARGET_LOCK_IN = "target_lock_in.png"
+TEMPLATE_TARGET_NOT_LOCK_IN = "target_not_lock_in.png"
+
+# Reference only
+TEMPLATE_AIM_FOR_ENEMY_LOCK_IN_FULL = (
+    "aim_for_enemy_target_already_lock_in(entire-screen).jpg"
+)
+TEMPLATE_AIM_FOR_ENEMY_NOT_LOCK_IN_FULL = (
+    "aim_for_enemy_target_not_lock_in(entire-screen).jpg"
+)
+
+# State 13 - 14 timing (after State 13 final A press)
+AIM_PHASE_USE_FIXED_WAIT = True
+AIM_PHASE_FIXED_WAIT_SECONDS = 60.0
+AIM_PHASE_TIMEOUT = 120.0
+AIM_PHASE_TIMEOUT_BUFFER = 15.0
+AIM_PHASE_MIN_TIMEOUT = 20.0
+AIM_PHASE_POLL_INTERVAL = 1.0
+AIM_PHASE_LOG_EVERY = 10.0
+AIM_PHASE_MEASURE_ONLY = False
+AIM_PHASE_TIMES_FILE = LOGS_DIR / "aim_phase_times.json"
+
+# Template confidence (tune with diagnose_state14.py)
+STATE14_AIM_CONFIDENCE = 0.65
+STATE14_TARGET_LOCK_IN_CONFIDENCE = 0.65
+STATE14_TARGET_NOT_LOCK_IN_CONFIDENCE = 0.65
+
+# Not locked: D-pad Left presses before A
+AIM_TARGET_NOT_LOCKED_LEFT_COUNT = 2

@@ -29,6 +29,7 @@ class GameState(Enum):
     SELECTED_EXP_3_X = auto()
     FINISH_ITEM_SELECTED = auto()
     INITIAL_ROUND1_BATTLE_SETUP = auto()
+    AIM_FOR_ENEMY = auto()
     DONE = auto()
 
 
@@ -67,6 +68,8 @@ class StateMachine:
                 self._state_finish_item_selected()
             elif self.state == GameState.INITIAL_ROUND1_BATTLE_SETUP:
                 self._state_initial_round1_battle_setup()
+            elif self.state == GameState.AIM_FOR_ENEMY:
+                self._state_aim_for_enemy()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -657,5 +660,137 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info("Battle setup complete. Stopping (next state TBD).")
+        logger.info("Battle setup complete.")
+        logger.info("Transition: State 13 -> State 14 (Aim for Enemy)")
+        self.state = GameState.DONE
+
+    def _detect_target_lock_state(self) -> str:
+        """
+        Returns 'locked' or 'not_locked', or 'unknown'.
+        Compares match scores for both target templates.
+        """
+        lock_conf = config.STATE14_TARGET_LOCK_IN_CONFIDENCE
+        not_lock_conf = config.STATE14_TARGET_NOT_LOCK_IN_CONFIDENCE
+
+        lock_result = vision.find_on_screen_with_score(
+            config.TEMPLATE_TARGET_LOCK_IN, confidence=0.0
+        )
+        not_lock_result = vision.find_on_screen_with_score(
+            config.TEMPLATE_TARGET_NOT_LOCK_IN, confidence=0.0
+        )
+
+        lock_score = lock_result[2] if lock_result else 0.0
+        not_lock_score = not_lock_result[2] if not_lock_result else 0.0
+
+        logger.info(
+            "Target lock scores - locked: %.3f, not_locked: %.3f",
+            lock_score,
+            not_lock_score,
+        )
+
+        if lock_score >= lock_conf and lock_score >= not_lock_score:
+            return "locked"
+        if not_lock_score >= not_lock_conf:
+            return "not_locked"
+        return "unknown"
+
+    # --------------------------------------------------------------
+    # State 14: Aim for Enemy
+    # --------------------------------------------------------------
+    def _state_aim_for_enemy(self) -> None:
+        """
+        Wait for aim mode, then handle target lock state.
+        Detect aim mode: aim_for_enemy_text.png
+        Locked:     target_lock_in.png     -> A press
+        Not locked: target_not_lock_in.png -> D-pad Left x2 -> A press
+        """
+        logger.info("Entering State 14: Aim for Enemy")
+
+        # --- Phase 1: wait for aim mode (fixed wait and/or template) ---
+        if config.AIM_PHASE_USE_FIXED_WAIT:
+            wait_s = timing.get_aim_phase_fixed_wait_seconds()
+            logger.info("Aim phase: fixed blind wait %.0fs", wait_s)
+
+            elapsed = 0.0
+            while elapsed < wait_s:
+                chunk = min(config.AIM_PHASE_LOG_EVERY, wait_s - elapsed)
+                time.sleep(chunk)
+                elapsed += chunk
+                if elapsed < wait_s:
+                    logger.info(
+                        "Still waiting for aim mode... %.0fs / %.0fs", elapsed, wait_s
+                    )
+        else:
+            logger.info(
+                "Aim phase: waiting for %s (timeout=%.0fs)",
+                config.TEMPLATE_AIM_FOR_ENEMY_TEXT,
+                config.AIM_PHASE_TIMEOUT,
+            )
+            aim_marker = vision.wait_for_element(
+                config.TEMPLATE_AIM_FOR_ENEMY_TEXT,
+                timeout=config.AIM_PHASE_TIMEOUT,
+                confidence=config.STATE14_AIM_CONFIDENCE,
+                poll_interval=config.AIM_PHASE_POLL_INTERVAL,
+            )
+            if aim_marker is None:
+                timing.mark_aim_phase_end(found=False)
+                logger.error("Aim for enemy mode not detected")
+                vision.save_debug_screenshot("state14_aim_fail.png")
+                self.state = GameState.DONE
+                return
+
+        # Verify aim mode text is on screen (even after fixed wait)
+        aim_point = vision.find_on_screen(
+            config.TEMPLATE_AIM_FOR_ENEMY_TEXT,
+            confidence=config.STATE14_AIM_CONFIDENCE,
+        )
+        if aim_point is None:
+            elapsed = timing.mark_aim_phase_end(found=False)
+            logger.error(
+                "aim_for_enemy_text not visible after wait (%.1fs). Check template: %s",
+                elapsed or 0,
+            )
+            vision.save_debug_screenshot("state14_aim_fail.png")
+            self.state = GameState.DONE
+            return
+
+        elapsed = timing.mark_aim_phase_end(found=True)
+        logger.info("Aim mode detected at %s after %.2fs", aim_point, elapsed or 0)
+
+        if config.AIM_PHASE_MEASURE_ONLY:
+            logger.info(
+                "AIM_PHASE_MEASURE_ONLY=True - stopping after aim mode detected"
+            )
+            self.state = GameState.DONE
+            return
+
+        # --- Phase 2: locked vs not locked ---
+        lock_state = self._detect_target_lock_state()
+
+        if lock_state == "locked":
+            logger.info("Target already locked in - pressing A")
+            self.inputs.press_button("Continue/Confirm")
+            human_delay()
+
+        elif lock_state == "not_locked":
+            logger.info(
+                "Target not locked - pressing D-pad Left x%d then A",
+                config.AIM_TARGET_NOT_LOCKED_LEFT_COUNT,
+            ),
+            self._press_repeated("Move Left", config.AIM_TARGET_NOT_LOCKED_LEFT_COUNT)
+            self.inputs.press_button("Continue/Confirm")
+            human_delay()
+
+        else:
+            logger.error("Could not determine target lock state")
+            vision.save_debug_screenshot("state14_lock_fail.png")
+            logger.info(
+                "Compare to %s / %s",
+                config.TEMPLATE_AIM_FOR_ENEMY_LOCK_IN_FULL,
+                config.TEMPLATE_AIM_FOR_ENEMY_NOT_LOCK_IN_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info("Aim for enemy complete. Stopping (next state TBD).")
         self.state = GameState.DONE
