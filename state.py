@@ -30,6 +30,7 @@ class GameState(Enum):
     FINISH_ITEM_SELECTED = auto()
     INITIAL_ROUND1_BATTLE_SETUP = auto()
     AIM_FOR_ENEMY = auto()
+    DISCARD = auto()
     DONE = auto()
 
 
@@ -70,6 +71,8 @@ class StateMachine:
                 self._state_initial_round1_battle_setup()
             elif self.state == GameState.AIM_FOR_ENEMY:
                 self._state_aim_for_enemy()
+            elif self.state == GameState.DISCARD:
+                self._state_discard()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -713,5 +716,97 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info("Aim for enemy complete. Stopping (next state TBD).")
+        logger.info("Aim for enemy complete.")
+        logger.info("Transition: State 14 -> State 15 (wait for Discard)")
+        self.state = GameState.DISCARD
+
+    def _wait_for_discard_button(self) -> vision.Point | None:
+        """Poll until Discard text appears; log progress periodically."""
+        template = config.TEMPLATE_DISCARD_BUTTON_TEXT
+        timeout = config.DISCARD_WAIT_TIMEOUT
+        confidence = config.DISCARD_CONFIDENCE
+        poll_interval = config.DISCARD_POLL_INTERVAL
+        log_every = getattr(config, "DISCARD_LOG_EVERY", 30.0)
+        snapshot_every = getattr(config, "DISCARD_SNAPSHOT_EVERY", 0.0)
+
+        deadline = time.monotonic() + timeout
+        next_log = time.monotonic() + log_every
+        next_snapshot = (
+            time.monotonic() + snapshot_every if snapshot_every > 0 else float("inf")
+        )
+        start = time.monotonic()
+
+        while time.monotonic() < deadline:
+            point = vision.find_on_screen(template, confidence=confidence)
+            if point is not None:
+                elapsed = time.monotonic() - start
+                logger.info(
+                    "Found %s at %s after %.1fs",
+                    template,
+                    point,
+                    elapsed,
+                )
+                return point
+
+            now = time.monotonic()
+
+            if now >= next_log:
+                elapsed = now - start
+                logger.info(
+                    "Still waiting for Discard... %.0fs / %.0fs",
+                    elapsed,
+                    timeout,
+                )
+                vision.log_best_match(template, confidence)
+                next_log = now + log_every
+
+            if now >= next_snapshot:
+                vision.save_debug_screenshot(f"state15_discard_wait_{int(elapsed)}.png")
+                next_snapshot = now + snapshot_every
+
+            time.sleep(poll_interval)
+
+        vision.log_best_match(template, confidence)
+        return None
+
+    # --------------------------------------------------------------
+    # State 15: Discard
+    # --------------------------------------------------------------
+    def _state_discard(self) -> None:
+        """
+        Battle runs on its own after State 14.
+        Poll until Discard button text appears, then press A.
+        Matcher: discard_button_text.png
+        """
+        logger.info("Entering State 15: Discard")
+        logger.info(
+            "Waiting for battle to finish - polling for %s (timeout=%.0fs)",
+            config.TEMPLATE_DISCARD_BUTTON_TEXT,
+            config.DISCARD_WAIT_TIMEOUT,
+        )
+
+        discard_button = self._wait_for_discard_button()
+
+        if discard_button is None:
+            logger.error(
+                "Discard button not detected within %.0fs. Check template: %s",
+                config.DISCARD_WAIT_TIMEOUT,
+                config.TEMPLATE_DISCARD_BUTTON_TEXT,
+            )
+            vision.save_debug_screenshot("state15_discard_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_DISCARD_BUTTON_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "Discard button found at %s - pressing Continue/Confirm (A)",
+            discard_button,
+        )
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info("Discard confirmed. Stopping (next state TBD).")
         self.state = GameState.DONE

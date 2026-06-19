@@ -162,3 +162,16 @@ AIM_PHASE_TIMES_FILE = LOGS_DIR / "aim_phase_times.json"
 
 # Not locked: D-pad Left presses before A
 AIM_TARGET_DPAD_LEFT_COUNT = 3
+
+# State 15 - Discard (after battle finishes)
+TEMPLATE_DISCARD_BUTTON_TEXT = "discard_button_text.png"
+
+# Reference only
+TEMPLATE_DISCARD_BUTTON_FULL = "discard_button(entire-screen).jpg"
+
+# Long poll - battle end can take many minutes (scores, prompts, loads)
+DISCARD_WAIT_TIMEOUT = 900.0  # 15 min max; exits early when found
+DISCARD_POLL_INTERVAL = 1.0
+DISCARD_LOG_EVERY = 30.0  # progress log while waiting
+DISCARD_SNAPSHOT_EVERY = 0  # e.g. 60.0 to save debug shots every 60s
+DISCARD_CONFIDENCE = 0.65  # tune with diagnose_state15.py
