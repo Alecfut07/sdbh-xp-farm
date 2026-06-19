@@ -154,10 +154,10 @@ TEMPLATE_AIM_FOR_ENEMY_NOT_LOCK_IN_FULL = (
 )
 
 # State 14 aim - use analog stick for finer left movement (vs full d-pad step)
-AIM_USE_ANALOG_LEFT = False
+AIM_USE_ANALOG_LEFT = True
 
 # Stick deflection: 0.0-1.0 (0.25 = ~25% left, smaller step per press)
-AIM_ANALOG_LEFT_STRENGTH = 0.20
+AIM_ANALOG_LEFT_STRENGTH = 0.75
 
 # How long stick stays left before releasing (seconds)
 AIM_ANALOG_LEFT_HOLD = 0.06
