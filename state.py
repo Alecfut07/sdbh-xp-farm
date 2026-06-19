@@ -41,9 +41,43 @@ class StateMachine:
     def __init__(self, inputs: InputHandler) -> None:
         self.inputs = inputs
         self.state = GameState.TOURNAMENT_SELECTION
+        self.cycle = 1
+
+    def _should_skip_exp_setup(self) -> bool:
+        """Cycle 2+ skips States 8 - 11 (EXP item already configured)"""
+        if not getattr(config, "SKIP_EXP_SETUP_AFTER_FIRST_CYCLE", True):
+            return False
+        return self.cycle > 1
+
+    def _finish_cycle_or_loop(self) -> None:
+        """After State 18: loop to State 1 or stop."""
+        max_cycles = getattr(config, "RUN_CYCLES", 0)
+
+        if max_cycles == 1 or (max_cycles > 0 and self.cycle >= max_cycles):
+            logger.info(
+                "All cycles complete (%d/%d). Stopping.",
+                self.cycle,
+                max_cycles if max_cycles > 0 else self.cycle,
+            )
+            self.state = GameState.DONE
+            return
+
+        delay = getattr(config, "CYCLE_DELAY_SECONDS", 10.0)
+        logger.info(
+            "Cycle %d complete. Next cycle in %.0fs (skipping States 8-11)...",
+            self.cycle,
+            delay,
+        )
+        time.sleep(delay)
+
+        self.cycle += 1
+        logger.info("=== Starting cycle %d ===", self.cycle)
+        self.state = GameState.TOURNAMENT_SELECTION
 
     def run(self) -> None:
-        logger.info("State machine starting at %s", self.state.name)
+        logger.info(
+            "State machine starting at %s (cycle %d)", self.state.name, self.cycle
+        )
 
         while self.state != GameState.DONE:
             if self.state == GameState.TOURNAMENT_SELECTION:
@@ -364,8 +398,17 @@ class StateMachine:
         human_delay()
 
         logger.info("Continue confirmed.")
-        logger.info("Transition: Continue Hero Robo Round -> Set Item EXP")
-        self.state = GameState.SET_ITEM_EXP
+
+        if self._should_skip_exp_setup():
+            logger.info(
+                "Cycle %d: skipping States 8-11 (EXP setup already done)",
+                self.cycle,
+            )
+            logger.info("Transition: Continue Hero Robo Round -> Finish Item Selected")
+            self.state = GameState.FINISH_ITEM_SELECTED
+        else:
+            logger.info("Transition: Continue Hero Robo Round -> Set Item EXP")
+            self.state = GameState.SET_ITEM_EXP
 
     # --------------------------------------------------------------
     # State 8: Set Item EXP (1.5x logo)
@@ -998,5 +1041,5 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info("Claim reward complete. Full run finished.")
-        self.state = GameState.DONE
+        logger.info("Claim reward complete (cycle %d).", self.cycle)
+        self._finish_cycle_or_loop()

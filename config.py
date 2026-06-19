@@ -209,3 +209,10 @@ FINAL_CUTSCENE_CONFIDENCE = 0.65  # tune with diagnose_state17.py
 # State 18 - Claim Reward (OK) - reference only, no runtime wait
 TEMPLATE_CLAIM_REWARD_TEXT = "claim_reward_text.png"
 TEMPLATE_CLAIM_REWARD_FULL = "claim_reward(entire-screen).jpg"
+
+# Loop control
+RUN_CYCLES = 0  # 0 = infinite; 1 = single run; N = N full cycles
+CYCLE_DELAY_SECONDS = 10.0  # puase before starting next cycle (after state 18)
+
+# Cycle 2+ skips EXP item setup (State 8 - 11)
+SKIP_EXP_SETUP_AFTER_FIRST_CYCLE = True
