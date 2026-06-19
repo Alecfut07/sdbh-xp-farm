@@ -31,6 +31,7 @@ class GameState(Enum):
     INITIAL_ROUND1_BATTLE_SETUP = auto()
     AIM_FOR_ENEMY = auto()
     DISCARD = auto()
+    CONFIRM_DISCARD = auto()
     DONE = auto()
 
 
@@ -73,6 +74,8 @@ class StateMachine:
                 self._state_aim_for_enemy()
             elif self.state == GameState.DISCARD:
                 self._state_discard()
+            elif self.state == GameState.CONFIRM_DISCARD:
+                self._state_confirm_discard()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -808,5 +811,30 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info("Discard confirmed. Stopping (next state TBD).")
+        logger.info("Discard confirmed.")
+        logger.info("Transition: State 15 -> State 16 (Confirm Discard Yes)")
+        self.state = GameState.CONFIRM_DISCARD
+
+    # --------------------------------------------------------------
+    # State 16: Confirm Discard (Yes)
+    # --------------------------------------------------------------
+    def _state_confirm_discard(self) -> None:
+        """
+        Confirm discard dialog - no wait (human_delay from State 15 is enough)
+        Sequence: D-pad Left x1 -> A
+        Reference: confirm_discard_button_text.png / confirm_discard_button(entire-screen).jpg
+        """
+        logger.info("Entering State 16: Confirm Discard (Yes)")
+
+        # D-pad Left x1 0 highlight Yes
+        logger.info("Step 1: Move Left x1 (select Yes)")
+        self.inputs.press_button("Move Left")
+        human_delay()
+
+        # A button - confirm Yes
+        logger.info("Step 2: Continue/Confirm (A)")
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info("Confirm discard complete. Stopping (next state TBD).")
         self.state = GameState.DONE

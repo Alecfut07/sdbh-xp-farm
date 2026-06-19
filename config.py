@@ -175,3 +175,7 @@ DISCARD_POLL_INTERVAL = 1.0
 DISCARD_LOG_EVERY = 30.0  # progress log while waiting
 DISCARD_SNAPSHOT_EVERY = 0  # e.g. 60.0 to save debug shots every 60s
 DISCARD_CONFIDENCE = 0.65  # tune with diagnose_state15.py
+
+# State 16 - Confirm Discard (Yes) - reference only, no runtime wait
+TEMPLATE_CONFIRM_DISCARD_BUTTON_TEXT = "confirm_discard_button_text.png"
+TEMPLATE_CONFIRM_DISCARD_BUTTON_FULL = "confirm_discard_button(entire-screen).jpg"
