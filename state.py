@@ -7,7 +7,7 @@ from enum import Enum, auto
 
 import config
 import vision
-from input_handler import InputHandler, human_delay
+from input_handler import InputHandler, human_delay, ControllerInputHandler
 
 import timing
 import time
@@ -671,6 +671,26 @@ class StateMachine:
         logger.info("Transition: State 13 -> State 14 (Aim for Enemy)")
         self.state = GameState.AIM_FOR_ENEMY
 
+    def _press_aim_left(self, count: int) -> None:
+        """State 14 aim: analog nudge or normal d-pad left."""
+        use_analog = getattr(config, "AIM_USE_ANALOG_LEFT", False)
+
+        for i in range(count):
+            logger.info("Aim left press %d/%d", i + 1, count)
+
+            if use_analog and isinstance(self.inputs, ControllerInputHandler):
+                human_delay(
+                    config.AIM_ANALOG_LEFT_DELAY_MIN,
+                    config.AIM_ANALOG_LEFT_DELAY_MAX,
+                )
+                self.inputs.nudge_left(
+                    strength=config.AIM_ANALOG_LEFT_STRENGTH,
+                    hold_s=config.AIM_ANALOG_LEFT_HOLD,
+                )
+            else:
+                self.inputs.press_button("Move Left")
+                human_delay()
+
     # --------------------------------------------------------------
     # State 14: Aim for Enemy
     # --------------------------------------------------------------
@@ -712,7 +732,7 @@ class StateMachine:
             "Step 1: Move Left x%d",
             config.AIM_TARGET_DPAD_LEFT_COUNT,
         )
-        self._press_repeated("Move Left", config.AIM_TARGET_DPAD_LEFT_COUNT)
+        self._press_aim_left(config.AIM_TARGET_DPAD_LEFT_COUNT)
 
         # A button
         logger.info("Step 2: Continue/Confirm (A)")

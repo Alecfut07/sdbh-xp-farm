@@ -221,6 +221,29 @@ class ControllerInputHandler(InputHandler):
         except Exception:
             logger.exception("Controller press_button failed for %s", action)
 
+    def _nudge_stick(self, x: float, y: float, hold_s: float) -> None:
+        """Move left stick to partial deflection (-1.0..1.0), then center."""
+        if self._ui is None or self._e is None:
+            logger.error("No UInput device - stick nudge skipped")
+            return
+
+        x_val = int(max(-1.0, min(1.0, x)) * 32767)
+        y_val = int(max(-1.0, min(1.0, y)) * 32767)
+
+        self._ui.write(self._e.EV_ABS, self._e.ABS_X, x_val)
+        self._ui.write(self._e.EV_ABS, self._e.ABS_Y, y_val)
+        self._ui.syn()
+        time.sleep(hold_s)
+        self._ui.write(self._e.EV_ABS, self._e.ABS_X, 0)
+        self._ui.write(self._e.EV_ABS, self._e.ABS_Y, 0)
+        self._ui.syn()
+
+    def nudge_left(self, strength: float = 0.25, hold_s: float = 0.06) -> None:
+        logger.info(
+            "Controller nudge left (strength=%.2f, hold=%.3fs)", strength, hold_s
+        )
+        self._nudge_stick(-strength, 0.0, hold_s)
+
     def drag_drop(self, start: Point, end: Point, duration: float = 0.4) -> None:
         logger.info("Controller stick drag %s -> %s (not implemented yet)", start, end)
 
