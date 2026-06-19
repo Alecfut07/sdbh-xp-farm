@@ -972,6 +972,12 @@ class StateMachine:
         human_delay()
         human_delay()
         human_delay()
+        human_delay()
+        human_delay()
+        human_delay()
+        human_delay()
+        human_delay()
+        human_delay()
 
         logger.info("Final cutscene skipped.")
         logger.info("Transition: State 17 -> State 18 (Claim Reward OK)")
