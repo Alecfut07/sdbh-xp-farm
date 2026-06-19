@@ -32,6 +32,7 @@ class GameState(Enum):
     AIM_FOR_ENEMY = auto()
     DISCARD = auto()
     CONFIRM_DISCARD = auto()
+    SKIP_FINAL_CUTSCENE = auto()
     DONE = auto()
 
 
@@ -76,6 +77,8 @@ class StateMachine:
                 self._state_discard()
             elif self.state == GameState.CONFIRM_DISCARD:
                 self._state_confirm_discard()
+            elif self.state == GameState.SKIP_FINAL_CUTSCENE:
+                self._state_skip_final_cutscene()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -856,5 +859,99 @@ class StateMachine:
         self.inputs.press_button("Continue/Confirm")
         human_delay()
 
-        logger.info("Confirm discard complete. Stopping (next state TBD).")
+        logger.info("Confirm discard complete.")
+        logger.info("Transition: State 16 -> State 17 (wait for final cutscene)")
+        self.state = GameState.SKIP_FINAL_CUTSCENE
+
+    def _wait_for_final_cutscene_dialog(self) -> vision.Point | None:
+        """Poll until final 'Y-Yes! I won!' dialog appears; log progress periodically."""
+        template = config.TEMPLATE_SKIP_FINAL_CUTSCENE_TEXT
+        timeout = config.FINAL_CUTSCENE_WAIT_TIMEOUT
+        confidence = config.FINAL_CUTSCENE_CONFIDENCE
+        poll_interval = config.FINAL_CUTSCENE_POLL_INTERVAL
+        log_every = getattr(config, "FINAL_CUTSCENE_LOG_EVERY", 30.0)
+        snapshot_every = getattr(config, "FINAL_CUTSCENE_SNAPSHOT_EVERY", 0.0)
+
+        deadline = time.monotonic() + timeout
+        next_log = time.monotonic() + log_every
+        next_snapshot = (
+            time.monotonic() + snapshot_every if snapshot_every > 0 else float("inf")
+        )
+        start = time.monotonic()
+
+        while time.monotonic() < deadline:
+            point = vision.find_on_screen(template, confidence=confidence)
+            if point is not None:
+                elapsed = time.monotonic() - start
+                logger.info(
+                    "Found %s at %s after %.1fs",
+                    template,
+                    point,
+                    elapsed,
+                )
+                return point
+
+            now = time.monotonic()
+
+            if now >= next_log:
+                elapsed = now - start
+                logger.info(
+                    "Still waiting for final cutscene... %.0fs / %.0fs",
+                    elapsed,
+                    timeout,
+                )
+                vision.log_best_match(template, confidence)
+                next_log = now + log_every
+
+            if now >= next_snapshot:
+                vision.save_debug_screenshot(
+                    f"state17_cutscene_wait_{int(elapsed)}.png"
+                )
+                next_snapshot = now + snapshot_every
+
+            time.sleep(poll_interval)
+
+        vision.log_best_match(template, confidence)
+        return None
+
+    # --------------------------------------------------------------
+    # State 17: Skip Final Cutscene
+    # --------------------------------------------------------------
+    def _state_skip_final_cutscene(self) -> None:
+        """
+        Poll until final cutscene dialog appears, then skip with Start.
+        Matcher: skip_final_cutscene_text.png ("Y-Yes! I won!")
+        Action: Open Menu (Start button)
+        """
+        logger.info("Entering State 17: Skip Final Cutscene")
+        logger.info(
+            "Waiting for post-battle rewards/loads - polling for %s (timeout=%.0fs)",
+            config.TEMPLATE_SKIP_FINAL_CUTSCENE_TEXT,
+            config.FINAL_CUTSCENE_WAIT_TIMEOUT,
+        )
+
+        dialog = self._wait_for_final_cutscene_dialog()
+
+        if dialog is None:
+            logger.error(
+                "Final cutscene dialog not detected within %.0fs. Check template: %s",
+                config.FINAL_CUTSCENE_WAIT_TIMEOUT,
+                config.TEMPLATE_SKIP_FINAL_CUTSCENE_TEXT,
+            )
+            vision.save_debug_screenshot("state17_cutscene_fail.png")
+            logger.info(
+                "Compare fail screenshot to reference: %s",
+                config.TEMPLATE_SKIP_FINAL_CUTSCENE_FULL,
+            )
+            self.state = GameState.DONE
+            return
+
+        logger.info(
+            "Final cutscene dialog found at %s - pressing Open Menu (Start)",
+            dialog,
+        )
+        self.inputs.press_button("Open Menu")
+        human_delay()
+
+        logger.info("Final cutscene skipped. Stopping (next state TBD).")
         self.state = GameState.DONE

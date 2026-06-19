@@ -192,3 +192,16 @@ DISCARD_CONFIDENCE = 0.65  # tune with diagnose_state15.py
 # State 16 - Confirm Discard (Yes) - reference only, no runtime wait
 TEMPLATE_CONFIRM_DISCARD_BUTTON_TEXT = "confirm_discard_button_text.png"
 TEMPLATE_CONFIRM_DISCARD_BUTTON_FULL = "confirm_discard_button(entire-screen).jpg"
+
+# State 17 - Skip Final Cutscene ("Y-Yes! I won!")
+TEMPLATE_SKIP_FINAL_CUTSCENE_TEXT = "skip_final_cutscene_text.png"
+
+# Reference only
+TEMPLATE_SKIP_FINAL_CUTSCENE_FULL = "skip_final_cutscene(entire-screen).jpg"
+
+# Long poll - exp rewards, prompts, load screens before cutscene
+FINAL_CUTSCENE_WAIT_TIMEOUT = 900.0  # 15 min max; exits early when found
+FINAL_CUTSCENE_POLL_INTERVAL = 1.0
+FINAL_CUTSCENE_LOG_EVERY = 30.0
+FINAL_CUTSCENE_SNAPSHOT_EVERY = 0  # e.g. 60.0 for debug screenshots
+FINAL_CUTSCENE_CONFIDENCE = 0.65  # tune with diagnose_state17.py
