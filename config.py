@@ -212,7 +212,7 @@ TEMPLATE_CLAIM_REWARD_FULL = "claim_reward(entire-screen).jpg"
 
 # Loop control
 RUN_CYCLES = 0  # 0 = infinite; 1 = single run; N = N full cycles
-CYCLE_DELAY_SECONDS = 5.0  # puase before starting next cycle (after state 18)
+CYCLE_DELAY_SECONDS = 10.0  # puase before starting next cycle (after state 18)
 
 # Cycle 2+ skips EXP item setup (State 8 - 11)
 SKIP_EXP_SETUP_AFTER_FIRST_CYCLE = True

@@ -62,7 +62,7 @@ class StateMachine:
             self.state = GameState.DONE
             return
 
-        delay = getattr(config, "CYCLE_DELAY_SECONDS", 5.0)
+        delay = getattr(config, "CYCLE_DELAY_SECONDS", 10.0)
         logger.info(
             "Cycle %d complete. Next cycle in %.0fs (skipping States 8-11)...",
             self.cycle,
