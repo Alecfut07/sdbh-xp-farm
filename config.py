@@ -155,13 +155,13 @@ TEMPLATE_AIM_FOR_ENEMY_NOT_LOCK_IN_FULL = (
 
 # State 13 - 14 timing (after State 13 final A press)
 AIM_PHASE_USE_FIXED_WAIT = True
-AIM_PHASE_FIXED_WAIT_SECONDS = 32.0
+AIM_PHASE_FIXED_WAIT_SECONDS = 28.0
 AIM_PHASE_LOG_EVERY = 10.0
 AIM_PHASE_MEASURE_ONLY = False
 AIM_PHASE_TIMES_FILE = LOGS_DIR / "aim_phase_times.json"
 
 # Not locked: D-pad Left presses before A
-AIM_TARGET_DPAD_LEFT_COUNT = 3
+AIM_TARGET_DPAD_LEFT_COUNT = 4
 
 # State 15 - Discard (after battle finishes)
 TEMPLATE_DISCARD_BUTTON_TEXT = "discard_button_text.png"
