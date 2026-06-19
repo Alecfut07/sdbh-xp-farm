@@ -3,7 +3,6 @@
 import config
 
 config.AIM_PHASE_MEASURE_ONLY = True
-config.AIM_PHASE_USE_FIXED_WAIT = False  # use template to detect + record time
 
 from main import main
 
