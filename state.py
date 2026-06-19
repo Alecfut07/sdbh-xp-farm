@@ -33,6 +33,7 @@ class GameState(Enum):
     DISCARD = auto()
     CONFIRM_DISCARD = auto()
     SKIP_FINAL_CUTSCENE = auto()
+    CLAIM_REWARD = auto()
     DONE = auto()
 
 
@@ -79,6 +80,8 @@ class StateMachine:
                 self._state_confirm_discard()
             elif self.state == GameState.SKIP_FINAL_CUTSCENE:
                 self._state_skip_final_cutscene()
+            elif self.state == GameState.CLAIM_REWARD:
+                self._state_claim_reward()
             else:
                 logger.error("Unhandled state: %s", self.state)
                 break
@@ -953,5 +956,24 @@ class StateMachine:
         self.inputs.press_button("Open Menu")
         human_delay()
 
-        logger.info("Final cutscene skipped. Stopping (next state TBD).")
+        logger.info("Final cutscene skipped.")
+        logger.info("Transition: State 17 -> State 18 (Claim Reward OK)")
+        self.state = GameState.CLAIM_REWARD
+
+    # --------------------------------------------------------------
+    # State 18: Claim Reward (OK)
+    # --------------------------------------------------------------
+    def _state_claim_reward(self) -> None:
+        """
+        Reward screen after final cutscene - no wait (human_delay from State 17 is enough)
+        Action: Continue/Confirm (A) on OK button
+        Reference: claim_reward_text.png / claim_reward(entire-screen).jpg
+        """
+        logger.info("Entering State 18: Claim Reward (OK)")
+
+        logger.info("Pressing Continue/Confirm (A)")
+        self.inputs.press_button("Continue/Confirm")
+        human_delay()
+
+        logger.info("Claim reward complete. Full run finished.")
         self.state = GameState.DONE

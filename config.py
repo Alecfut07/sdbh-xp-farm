@@ -205,3 +205,7 @@ FINAL_CUTSCENE_POLL_INTERVAL = 1.0
 FINAL_CUTSCENE_LOG_EVERY = 30.0
 FINAL_CUTSCENE_SNAPSHOT_EVERY = 0  # e.g. 60.0 for debug screenshots
 FINAL_CUTSCENE_CONFIDENCE = 0.65  # tune with diagnose_state17.py
+
+# State 18 - Claim Reward (OK) - reference only, no runtime wait
+TEMPLATE_CLAIM_REWARD_TEXT = "claim_reward_text.png"
+TEMPLATE_CLAIM_REWARD_FULL = "claim_reward(entire-screen).jpg"
