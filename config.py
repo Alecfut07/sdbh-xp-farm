@@ -161,4 +161,4 @@ AIM_PHASE_MEASURE_ONLY = False
 AIM_PHASE_TIMES_FILE = LOGS_DIR / "aim_phase_times.json"
 
 # Not locked: D-pad Left presses before A
-AIM_TARGET_DPAD_LEFT_COUNT = 2
+AIM_TARGET_DPAD_LEFT_COUNT = 3
