@@ -58,13 +58,6 @@ Screenshots use **`mss`** instead of PyAutoGUI capture for better reliability on
 - **Super Dragon Ball Heroes: World Mission** game copy from Steam.
 - Game window focused and unobstructed during runs.
 
-### ⚠️ Critical: Disable Steam Input
-
-1. Steam → **Library** → right-click the game → **Properties**
-2. **Controller** → set to **Disable Steam Input**
-3. Without this, the virtual gamepad is **ignored** and all inputs fail.
-   NOTE: When not using the automated app, put back **Enable Steam Input**.
-
 ### Install
 
 ```bash
